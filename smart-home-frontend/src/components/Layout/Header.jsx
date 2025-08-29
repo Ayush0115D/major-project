@@ -22,19 +22,21 @@ const Header = () => {
   }, [])
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 fixed w-full top-0 z-50">
+    <header className="bg-gray-900 shadow-lg border-b border-gray-700 fixed w-full top-0 z-50">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Left side - Logo and Title */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <Home className="h-8 w-8 text-blue-600" />
-              <h1 className="text-xl font-bold text-gray-900">
-                Smart Home Monitor
-              </h1>
-            </div>
-            <div className="hidden md:flex items-center space-x-2">
-              <span className="text-sm text-gray-500">Short Circuit Detection System</span>
+              <Home className="h-8 w-8 text-blue-400" />
+              <div className="leading-tight">
+                <h1 className="text-2xl font-extrabold text-blue-50">
+                  Smart Home Monitor
+                </h1>
+                <p className="text-xs text-gray-400 mt-0.5 tracking-wide">
+                  Short Circuit Detection System
+                </p>
+              </div>
             </div>
           </div>
 
@@ -42,32 +44,32 @@ const Header = () => {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               {isOnline ? (
-                <Wifi className="h-5 w-5 text-green-500" />
+                <Wifi className="h-5 w-5 text-green-400" />
               ) : (
-                <WifiOff className="h-5 w-5 text-red-500" />
+                <WifiOff className="h-5 w-5 text-red-400" />
               )}
               <span className={`text-sm font-medium ${
-                isOnline ? 'text-green-600' : 'text-red-600'
+                isOnline ? 'text-green-400' : 'text-red-400'
               }`}>
                 {isOnline ? 'Connected' : 'Offline'}
               </span>
             </div>
-            <div className="h-6 w-px bg-gray-300"></div>
-            <div className="text-sm text-gray-600">
+            <div className="h-6 w-px bg-gray-600"></div>
+            <div className="text-sm text-gray-300">
               {currentTime.toLocaleTimeString()}
             </div>
           </div>
 
           {/* Right side - Actions */}
           <div className="flex items-center space-x-4">
-            <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
+            <button className="relative p-2 text-gray-400 hover:text-white transition-colors">
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
             </button>
-            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+            <button className="p-2 text-gray-400 hover:text-white transition-colors">
               <Settings className="h-5 w-5" />
             </button>
-            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+            <button className="p-2 text-gray-400 hover:text-white transition-colors">
               <User className="h-5 w-5" />
             </button>
           </div>
