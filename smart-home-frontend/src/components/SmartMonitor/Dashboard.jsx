@@ -68,18 +68,26 @@ const RoomCard = ({ room }) => {
 const AlertPanel = ({ alerts }) => {
   const getAlertColor = (type) => {
     switch (type) {
-      case 'critical': return 'border-red-500 bg-red-950/30'
-      case 'warning': return 'border-amber-500 bg-amber-950/30'
-      default: return 'border-blue-500 bg-blue-950/30'
+      case 'critical': return 'border-red-500 bg-red-950/30 text-red-400'
+      case 'warning': return 'border-amber-500 bg-amber-950/30 text-amber-400'
+      default: return 'border-blue-500 bg-blue-950/30 text-blue-400'
+    }
+  }
+
+  const getAlertBgColor = (type) => {
+    switch (type) {
+      case 'critical': return 'bg-red-900/20'
+      case 'warning': return 'bg-amber-900/20'
+      default: return 'bg-blue-900/20'
     }
   }
 
   return (
-    <div className="bg-gray-900/60 backdrop-blur-sm rounded-xl border border-gray-700 p-6">
+    <div className="bg-gray-900/60 backdrop-blur-sm rounded-xl border border-gray-700 p-6 h-full">
       <h3 className="text-xl font-bold text-white mb-4">System Alerts</h3>
-      <div className="space-y-3 max-h-96 overflow-y-auto">
+      <div className="space-y-3 overflow-y-auto" style={{ maxHeight: 'calc(100% - 3rem)' }}>
         {alerts.filter(alert => !alert.resolved).map((alert) => (
-          <div key={alert.id} className={`p-4 rounded-lg border-l-4 ${getAlertColor(alert.type)}`}>
+          <div key={alert.id} className={`p-4 rounded-lg border-l-4 ${getAlertColor(alert.type)} ${getAlertBgColor(alert.type)}`}>
             <div className="flex items-center justify-between mb-2">
               <span className="font-medium text-white">{alert.room}</span>
               <span className="text-xs text-gray-400">
@@ -96,7 +104,7 @@ const AlertPanel = ({ alerts }) => {
 
 const SystemStatus = ({ stats }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <div className="bg-gradient-to-br from-blue-900/40 to-blue-800/20 backdrop-blur-sm border border-blue-600/30 rounded-xl p-6">
         <div className="flex items-center justify-between">
           <div>
@@ -298,33 +306,13 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white p-6">
-      <div className="space-y-8">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              Smart Home Monitor
-            </h1>
-            <p className="text-gray-400 mt-2 text-lg">Advanced electrical system monitoring & control</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="bg-gray-800/60 backdrop-blur-sm px-6 py-3 rounded-xl border border-gray-600">
-              <span className="text-sm text-gray-400">Last Updated:</span>
-              <span className="ml-2 font-medium text-white">{new Date().toLocaleTimeString()}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="h-3 w-3 bg-emerald-500 rounded-full animate-pulse"></div>
-              <span className="text-emerald-400 font-medium">System Online</span>
-            </div>
-          </div>
-        </div>
-
+      <div className="max-w-[1920px] mx-auto space-y-6">
         {/* System Status Overview */}
         <SystemStatus stats={systemStats} />
 
         {/* Critical Alerts Banner */}
         {criticalAlerts.length > 0 && (
-          <div className="bg-gradient-to-r from-red-900/40 to-red-800/20 border-2 border-red-500/50 rounded-xl p-6 backdrop-blur-sm">
+          <div className="bg-gradient-to-r from-red-900/40 to-red-800/20 border-2 border-red-500/50 rounded-xl p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="h-4 w-4 bg-red-500 rounded-full animate-pulse"></div>
@@ -337,22 +325,23 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Room Grid and Alerts */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-          {/* Room Cards */}
-          <div className="xl:col-span-3">
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold text-white mb-2">Room Status</h2>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Left Column - Room Status */}
+          <div className="xl:col-span-2 space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mb-2">Room Status</h2>
               <p className="text-gray-400">Real-time monitoring of electrical parameters across all zones</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {rooms.map((room) => (
                 <RoomCard key={room.id} room={room} />
               ))}
             </div>
           </div>
 
-          {/* Alert Panel */}
+          {/* Right Column - System Alerts */}
           <div className="xl:col-span-1">
             <AlertPanel alerts={alerts} />
           </div>
@@ -362,7 +351,7 @@ const Dashboard = () => {
         <div className="bg-gray-900/60 backdrop-blur-sm rounded-xl border border-gray-700 p-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-2xl font-bold text-white">Power Consumption Analytics</h3>
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">Power Consumption Analytics</h3>
               <p className="text-gray-400">24-hour power usage trends across all monitored zones</p>
             </div>
             <div className="text-right">
@@ -418,7 +407,7 @@ const Dashboard = () => {
         {/* House Layout Visualization */}
         <div className="bg-gray-900/60 backdrop-blur-sm rounded-xl border border-gray-700 p-8">
           <div className="mb-6">
-            <h3 className="text-2xl font-bold text-white">House Layout Monitor</h3>
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">House Layout Monitor</h3>
             <p className="text-gray-400">Interactive visual representation of all monitored zones</p>
           </div>
           <div className="relative bg-gradient-to-br from-gray-800/40 to-gray-700/20 rounded-xl h-[500px] overflow-hidden border border-gray-600">
