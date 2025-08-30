@@ -3,14 +3,14 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import DashboardView from './views/DashboardView';
 import AnalyticsView from './views/AnalyticsView';
-import { useSmartMonitorData } from './hooks/useSmartMonitorData';
+import { useSmartMonitorData } from '../hooks/useSmartMonitorData';
 
 const SmartMonitor = () => {
   const [currentView, setCurrentView] = useState('dashboard');
   const { roomData, alerts, powerData, currentTime, totalPower, avgVoltage, totalCurrent, efficiency } = useSmartMonitorData();
 
   return (
-    <div className="flex bg-gray-900 min-h-screen">
+    <div className="flex bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 min-h-screen">
       <Sidebar 
         currentView={currentView} 
         setCurrentView={setCurrentView}
@@ -21,7 +21,7 @@ const SmartMonitor = () => {
       <div className="flex-1">
         <Header currentTime={currentTime} />
         
-        <div className="overflow-auto">
+        <div className="overflow-auto h-[calc(100vh-80px)]">
           {currentView === 'dashboard' && 
             <DashboardView roomData={roomData} />
           }
