@@ -9,12 +9,15 @@ const TimeChart = () => {
   ];
 
   return (
-    <div className="mb-6 h-20 border-b border-gray-700">
-      <div className="flex justify-between text-xs text-gray-400 pb-2 overflow-hidden">
+    <div className="mb-10 h-16 border-b border-slate-700/50 relative">
+      <div className="flex justify-between text-xs text-gray-400 pb-4 overflow-hidden">
         {timeLabels.map((time, i) => (
-          <span key={i} className="whitespace-nowrap">{time}</span>
+          <span key={i} className="whitespace-nowrap opacity-60 hover:opacity-100 transition-opacity duration-300">
+            {time}
+          </span>
         ))}
       </div>
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500/50 via-cyan-500/50 to-blue-500/50"></div>
     </div>
   );
 };

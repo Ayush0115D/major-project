@@ -51,26 +51,26 @@ export const useSmartMonitorData = () => {
         ...prev,
         livingRoom: { 
           ...prev.livingRoom, 
-          voltage: 242 + Math.random() * 2 - 1, 
-          current: 2.2 + Math.random() * 0.2 - 0.1 
+          voltage: Math.max(240, Math.min(244, 242 + Math.random() * 2 - 1)), 
+          current: Math.max(2, Math.min(2.5, 2.2 + Math.random() * 0.2 - 0.1))
         },
         kitchen: { 
           ...prev.kitchen, 
-          voltage: 201 + Math.random() * 3 - 1.5, 
-          current: 5.6 + Math.random() * 0.3 - 0.15 
+          voltage: Math.max(199, Math.min(205, 201 + Math.random() * 3 - 1.5)), 
+          current: Math.max(5.2, Math.min(6, 5.6 + Math.random() * 0.3 - 0.15))
         },
         bedroom: { 
           ...prev.bedroom, 
-          voltage: 232 + Math.random() * 2 - 1, 
-          current: 7 + Math.random() * 0.2 - 0.1 
+          voltage: Math.max(230, Math.min(235, 232 + Math.random() * 2 - 1)), 
+          current: Math.max(6.5, Math.min(7.5, 7 + Math.random() * 0.2 - 0.1))
         },
         bathroom: { 
           ...prev.bathroom, 
-          voltage: 160 + Math.random() * 2 - 1, 
-          current: 15 + Math.random() * 0.5 - 0.25 
+          voltage: Math.max(158, Math.min(162, 160 + Math.random() * 2 - 1)), 
+          current: Math.max(14.5, Math.min(15.5, 15 + Math.random() * 0.5 - 0.25))
         }
       }));
-    }, 2000);
+    }, 3000);
 
     return () => clearInterval(timer);
   }, []);

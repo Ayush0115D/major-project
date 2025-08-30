@@ -1,51 +1,90 @@
 import React from 'react';
+import { Thermometer, Wifi, Clock } from 'lucide-react';
 
 const RoomStatusCard = ({ roomName, data, devices }) => {
-  const getStatusColor = (status) => {
+  const getStatusConfig = (status) => {
     switch(status) {
-      case 'NORMAL': return 'border-green-500';
-      case 'WARNING': return 'border-yellow-500';
-      case 'CRITICAL': return 'border-red-500';
-      default: return 'border-gray-500';
+      case 'NORMAL': 
+        return {
+          border: 'border-green-500/30',
+          badge: 'bg-green-500 text-white',
+          bg: 'from-green-500/5 to-emerald-500/5'
+        };
+      case 'WARNING': 
+        return {
+          border: 'border-yellow-500/30',
+          badge: 'bg-yellow-500 text-white',
+          bg: 'from-yellow-500/5 to-amber-500/5'
+        };
+      case 'CRITICAL': 
+        return {
+          border: 'border-red-500/30',
+          badge: 'bg-red-500 text-white',
+          bg: 'from-red-500/5 to-rose-500/5'
+        };
+      default: 
+        return {
+          border: 'border-gray-500/30',
+          badge: 'bg-gray-500 text-white',
+          bg: 'from-gray-500/5 to-slate-500/5'
+        };
     }
   };
 
-  const getStatusBadge = (status) => {
-    switch(status) {
-      case 'NORMAL': return 'bg-green-600 text-white';
-      case 'WARNING': return 'bg-yellow-600 text-white';
-      case 'CRITICAL': return 'bg-red-600 text-white';
-      default: return 'bg-gray-600 text-white';
-    }
-  };
+  const config = getStatusConfig(data.status);
 
   return (
-    <div className={`bg-gray-800 border ${getStatusColor(data.status)} p-4 rounded-lg`}>
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-white font-semibold">{roomName}</h4>
-        <span className={`${getStatusBadge(data.status)} text-xs px-2 py-1 rounded`}>
+    <div className={`bg-gradient-to-br ${config.bg} backdrop-blur-sm border ${config.border} p-6 rounded-2xl hover:shadow-xl transition-all duration-300 group`}>
+      <div className="flex items-center justify-between mb-6">
+        <h4 className="text-white text-xl font-bold group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-cyan-400 group-hover:bg-clip-text transition-all duration-300">
+          {roomName}
+        </h4>
+        <span className={`${config.badge} text-sm px-3 py-1 rounded-full font-medium shadow-lg`}>
           {data.status}
         </span>
       </div>
-      <div className="grid grid-cols-3 gap-4 text-center mb-4">
-        <div>
-          <div className="text-2xl font-bold text-blue-400">{data.voltage.toFixed(1)}V</div>
-          <div className="text-xs text-gray-400">VOLTAGE</div>
+      
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-blue-400 mb-1">{data.voltage.toFixed(1)}V</div>
+          <div className="text-xs text-gray-400 uppercase tracking-wider">Voltage</div>
         </div>
-        <div>
-          <div className="text-2xl font-bold text-green-400">{data.current.toFixed(1)}A</div>
-          <div className="text-xs text-gray-400">CURRENT</div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-green-400 mb-1">{data.current.toFixed(1)}A</div>
+          <div className="text-xs text-gray-400 uppercase tracking-wider">Current</div>
         </div>
-        <div>
-          <div className="text-2xl font-bold text-cyan-400">{data.power}W</div>
-          <div className="text-xs text-gray-400">POWER</div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-cyan-400 mb-1">{data.power}W</div>
+          <div className="text-xs text-gray-400 uppercase tracking-wider">Power</div>
         </div>
       </div>
-      <div className="text-sm text-gray-400">
-        <div className="mb-1">{data.temp}°C</div>
-        <div className="mb-1">Connected Devices:</div>
-        <div className="text-xs mb-2">{devices}</div>
-        <div className="text-xs text-gray-500">Updated: 11:42:32 pm</div>
+      
+      <div className="space-y-3 text-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Thermometer className="text-orange-400 mr-2" size={16} />
+            <span className="text-gray-300">Temperature</span>
+          </div>
+          <span className="text-white font-semibold">{data.temp}°C</span>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Wifi className="text-green-400 mr-2" size={16} />
+            <span className="text-gray-300">Connection</span>
+          </div>
+          <span className="text-green-400 font-semibold">Online</span>
+        </div>
+        
+        <div className="border-t border-slate-700/50 pt-3">
+          <div className="text-gray-400 text-xs mb-2">Connected Devices:</div>
+          <div className="text-gray-300 text-sm">{devices}</div>
+        </div>
+        
+        <div className="flex items-center text-xs text-gray-500">
+          <Clock className="mr-1" size={12} />
+          <span>Updated: 11:42:32 pm</span>
+        </div>
       </div>
     </div>
   );
@@ -61,10 +100,10 @@ const RoomStatusCards = ({ roomData }) => {
 
   return (
     <div>
-      <h3 className="text-xl font-bold text-white mb-4">Room Status</h3>
-      <p className="text-gray-400 mb-6">Real-time monitoring of electrical parameters across all zones</p>
+      <h3 className="text-2xl font-bold text-white mb-3">Room Status</h3>
+      <p className="text-gray-400 text-lg mb-8">Real-time monitoring of electrical parameters across all zones</p>
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-6">
         <RoomStatusCard 
           roomName="Living Room" 
           data={roomData.livingRoom} 
