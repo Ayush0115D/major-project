@@ -1,15 +1,26 @@
 import React from 'react';
-import { Users, Wifi, Shield } from 'lucide-react';
+import { Users, Wifi, Shield, Menu } from 'lucide-react';
 
-const Header = ({ currentTime }) => {
+const Header = ({ currentTime, toggleSidebar, sidebarOpen }) => {
   return (
     <div className="bg-slate-800/80 backdrop-blur-lg p-6 border-b border-slate-700/50 h-20">
       <div className="flex items-center justify-between h-full">
-        <div className="text-white">
-          <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-            {currentTime.toLocaleTimeString()} - {currentTime.toLocaleDateString()}
-          </span>
+        <div className="flex items-center">
+          {/* Hamburger Menu Button */}
+          <button
+            onClick={toggleSidebar}
+            className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors duration-200 mr-4"
+          >
+            <Menu className="text-gray-400 hover:text-white" size={24} />
+          </button>
+          
+          <div className="text-white">
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              {currentTime.toLocaleTimeString()} - {currentTime.toLocaleDateString()}
+            </span>
+          </div>
         </div>
+        
         <div className="flex items-center space-x-6 text-sm">
           <div className="flex items-center bg-green-500/10 px-4 py-2 rounded-full border border-green-500/20">
             <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
