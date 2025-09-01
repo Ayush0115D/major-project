@@ -2,17 +2,15 @@ import React from 'react';
 import StatsCards from '../components/StatsCards';
 import CriticalAlertBanner from '../components/CriticalAlertBanner';
 import RoomStatusCards from '../components/RoomStatusCards';
-import SystemAlerts from '../components/SystemAlerts';
-import PowerChart from '../components/PowerChart';
+import Analytics24Chart from '../components/Analytics24Chart';
 
 const AnalyticsView = ({ 
   roomData, 
-  alerts, 
   powerData, 
   totalPower, 
   avgVoltage, 
   totalCurrent, 
-  efficiency 
+  efficiency
 }) => {
   const criticalIssues = Object.values(roomData).filter(room => room.status === 'CRITICAL').length;
 
@@ -32,16 +30,14 @@ const AnalyticsView = ({
       
       <CriticalAlertBanner criticalIssues={criticalIssues} />
 
-      <div className="grid grid-cols-3 gap-8 mb-10">
-        <div className="col-span-2">
-          <RoomStatusCards roomData={roomData} />
-        </div>
-        <div>
-          <SystemAlerts alerts={alerts} />
-        </div>
+      {/* 24-Hour Analytics Chart */}
+      <div className="mb-10">
+        <Analytics24Chart powerData={powerData} totalPower={totalPower} />
       </div>
 
-      <PowerChart powerData={powerData} totalPower={totalPower} />
+      <div className="mb-10">
+        <RoomStatusCards roomData={roomData} />
+      </div>
     </div>
   );
 };

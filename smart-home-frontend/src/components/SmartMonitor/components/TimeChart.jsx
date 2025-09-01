@@ -2,17 +2,15 @@ import React from 'react';
 
 const TimeChart = () => {
   const timeLabels = [
-    '12:42 AM', '01:42 AM', '02:42 AM', '03:42 AM', '04:42 AM', '05:42 AM',
-    '06:42 AM', '07:42 AM', '08:42 AM', '09:42 AM', '10:42 AM', '11:42 AM',
-    '12:42 PM', '01:42 PM', '02:42 PM', '03:42 PM', '04:42 PM', '05:42 PM',
-    '06:42 PM', '07:42 PM', '08:42 PM', '09:42 PM', '10:42 PM', '11:42 PM'
+    '12:00 AM', '02:00 AM', '04:00 AM', '06:00 AM', '08:00 AM', '10:00 AM',
+    '12:00 PM', '02:00 PM', '04:00 PM', '06:00 PM', '08:00 PM', '10:00 PM'
   ];
 
   return (
-    <div className="mb-10 h-16 border-b border-slate-700/50 relative">
-      <div className="flex justify-between text-xs text-gray-400 pb-4 overflow-hidden">
+    <div className="mb-10 h-12 border-b border-slate-700/50 relative">
+      <div className="flex justify-between items-center text-sm text-gray-400 pb-4">
         {timeLabels.map((time, i) => (
-          <span key={i} className="whitespace-nowrap opacity-60 hover:opacity-100 transition-opacity duration-300">
+          <span key={i} className="text-xs opacity-70 hover:opacity-100 transition-opacity duration-300">
             {time}
           </span>
         ))}
