@@ -10,7 +10,7 @@ const AnalyticsView = ({
   totalPower, 
   avgVoltage, 
   totalCurrent, 
-  efficiency
+  efficiency 
 }) => {
   const criticalIssues = Object.values(roomData).filter(room => room.status === 'CRITICAL').length;
 

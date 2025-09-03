@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import DashboardView from './views/DashboardView';
+import MonitoringView from './views/MonitoringView';
 import AnalyticsView from './views/AnalyticsView';
 import AlertsView from './views/AlertsView';
+import SettingsView from './views/SettingsView';
 import { useSmartMonitorData } from '../hooks/useSmartMonitorData';
 
 const SmartMonitor = () => {
   const [currentView, setCurrentView] = useState('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(true); // NEW: Sidebar toggle state
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const { 
     roomData, 
     alerts, 
@@ -20,34 +22,31 @@ const SmartMonitor = () => {
     efficiency 
   } = useSmartMonitorData();
 
-  // NEW: Function to handle navigation and toggle sidebar
   const handleNavigation = (viewId) => {
     setCurrentView(viewId);
-    setSidebarOpen(false); // Hide sidebar after navigation
   };
 
   return (
     <div className="flex bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 min-h-screen">
       <Sidebar 
         currentView={currentView} 
-        setCurrentView={handleNavigation} // Updated to use new handler
+        setCurrentView={handleNavigation}
         roomData={roomData}
         alerts={alerts}
-        isOpen={sidebarOpen} // NEW: Pass sidebar state
-        toggleSidebar={() => setSidebarOpen(!sidebarOpen)} // NEW: Toggle function
+        isOpen={sidebarOpen}
+        toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
       
-      {/* Dynamic margin based on sidebar state */}
-      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-72' : 'ml-16'}`}>
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
         <Header 
           currentTime={currentTime}
-          toggleSidebar={() => setSidebarOpen(!sidebarOpen)} // NEW: Pass toggle to header
-          sidebarOpen={sidebarOpen} // NEW: Pass sidebar state to header
+          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          sidebarOpen={sidebarOpen}
         />
         
         <div className="overflow-auto h-[calc(100vh-80px)]">
-          {currentView === 'dashboard' && <DashboardView roomData={roomData} />}
-          {currentView === 'monitoring' && <DashboardView roomData={roomData} />}
+          {currentView === 'dashboard' && <DashboardView roomData={roomData} alerts={alerts} />}
+          {currentView === 'monitoring' && <MonitoringView roomData={roomData} />}
           {currentView === 'alerts' && <AlertsView alerts={alerts} roomData={roomData} />}
           {currentView === 'analytics' && (
             <AnalyticsView 
@@ -58,6 +57,19 @@ const SmartMonitor = () => {
               totalCurrent={totalCurrent}
               efficiency={efficiency}
             />
+          )}
+          {currentView === 'settings' && <SettingsView />}
+          {currentView === 'history' && (
+            <div className="p-8">
+              <h1 className="text-3xl font-bold text-white mb-4">History</h1>
+              <p className="text-gray-400">Historical data and trends coming soon...</p>
+            </div>
+          )}
+          {currentView === 'safety' && (
+            <div className="p-8">
+              <h1 className="text-3xl font-bold text-white mb-4">Safety Protocols</h1>
+              <p className="text-gray-400">Safety management features coming soon...</p>
+            </div>
           )}
         </div>
       </div>
