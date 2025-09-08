@@ -55,9 +55,9 @@ const Sidebar = ({ currentView, setCurrentView, roomData, alerts, isOpen, toggle
               {isOpen && (
                 <div className="ml-4 flex-1">
                   <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                    Smart
+                   SHIELD
                   </h1>
-                  <h1 className="text-xl font-bold text-white -mt-1">Monitor</h1>
+                  <h1 className="text-xl font-semibold text-white -mt-1">PORTAL</h1>
                 </div>
               )}
             </div>

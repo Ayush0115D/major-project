@@ -48,8 +48,8 @@ const DashboardView = ({ roomData, alerts }) => {
           </div>
           <div>
             <h1 className="text-4xl font-bold text-white mb-2">
-              Smart Short Circuit Detection 
-              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"> & Safety System</span>
+            Smart Hazard Indication 
+              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"> & Electrical Line Detection</span>
             </h1>
             <p className="text-xl text-gray-300">System Overview & Status Dashboard</p>
           </div>
