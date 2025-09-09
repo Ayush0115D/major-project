@@ -1,176 +1,168 @@
 import React from 'react';
-import { 
-  Activity, 
-  Zap, 
-  Home, 
-  BarChart3, 
-  Clock, 
-  Shield, 
-  Settings,
-  Bell,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
 
 const Sidebar = ({ currentView, setCurrentView, roomData, alerts, isOpen, toggleSidebar }) => {
-  const roomsOnline = Object.values(roomData).filter(room => room.status !== 'OFFLINE').length;
-  const activeAlerts = alerts.length;
-  const criticalIssues = Object.values(roomData).filter(room => room.status === 'CRITICAL').length;
+  const room = roomData['living-room'];
 
-  const navigationItems = [
-    { id: 'dashboard', icon: Home, label: 'Dashboard' },
-    { id: 'monitoring', icon: Activity, label: 'Live Monitoring' },
-    { id: 'alerts', icon: Bell, label: 'Alerts' },
-    { id: 'analytics', icon: BarChart3, label: 'Analytics' },
-    { id: 'history', icon: Clock, label: 'History' },
-    { id: 'safety', icon: Shield, label: 'Safety' },
-    { id: 'settings', icon: Settings, label: 'Settings' }
+  const menuItems = [
+    { id: 'dashboard', name: 'Dashboard', icon: '🏠', description: 'System Overview' },
+    { id: 'room-status', name: 'Living Room', icon: '🛋️', description: `${room?.components?.length || 0} Components`, alerts: alerts.filter(a => a.location === 'Living Room' && a.status === 'active').length },
+    { id: 'monitoring', name: 'Real-time Monitor', icon: '📊', description: 'Live Data Stream' },
+    { id: 'alerts', name: 'System Alerts', icon: '🚨', description: 'Fault Management', alerts: alerts.filter(alert => alert.status === 'active').length },
+    { id: 'analytics', name: 'Analytics', icon: '📈', description: 'Power Analysis' },
+    { id: 'history', name: 'History', icon: '📜', description: 'Historical Data' },
+    { id: 'safety', name: 'Safety', icon: '🛡️', description: 'Safety Protocols' },
+    { id: 'settings', name: 'Settings', icon: '⚙️', description: 'System Config' }
   ];
 
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* Mobile Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={toggleSidebar}
         />
       )}
-
+      
       {/* Sidebar */}
-      <div className={`
-        ${isOpen ? 'w-72' : 'w-20'} 
-        bg-gradient-to-b from-slate-800 via-slate-900 to-gray-900 
-        text-white h-screen overflow-hidden border-r border-slate-700/50 
-        backdrop-blur-sm fixed left-0 top-0 z-50 transition-all duration-300
-      `}>
-        {/* Scrollable content */}
-        <div className="h-full overflow-y-auto">
-          <div className={`${isOpen ? 'p-6' : 'p-3'} transition-all duration-300`}>
-            {/* Logo Section */}
-            <div className={`flex items-center mb-8 ${!isOpen && 'justify-center'}`}>
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-lg hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Activity className="text-white" size={24} />
-              </div>
-              {isOpen && (
-                <div className="ml-4 flex-1">
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                   SHIELD
+      <div className={`fixed left-0 top-0 h-screen bg-slate-900/95 backdrop-blur-sm border-r border-slate-800 text-white transition-all duration-300 z-50 flex flex-col ${
+        isOpen ? 'w-72' : 'w-20'
+      }`}>
+        
+        {/* Top Section */}
+       <div className="flex-shrink-0 p-4 border-b border-slate-800 flex items-center justify-between">
+        {isOpen ? (
+            <>
+              {/* Branding */}
+              <div className="flex items-center space-x-2">
+                <div className="text-3xl text-blue-400 drop-shadow-lg">🛡️</div>
+                <div>
+                  <h1 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-cyan-300 to-purple-400 bg-clip-text text-transparent">
+                    SHIELD
                   </h1>
-                  <h1 className="text-xl font-semibold text-white -mt-1">PORTAL</h1>
+                  <p className="text-xs text-blue-300 tracking-wide drop-shadow-sm">
+                    Smart Home Monitor
+                  </p>
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* Toggle Button */}
-            <div className={`mb-6 ${!isOpen && 'flex justify-center'}`}>
+              {/* Collapse Button */}
               <button
                 onClick={toggleSidebar}
-                className="p-2 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-colors duration-200"
+                className="p-2 rounded-lg hover:bg-slate-800 transition-colors text-gray-400 hover:text-white"
               >
-                {isOpen ? (
-                  <ChevronLeft className="text-gray-400 hover:text-white" size={20} />
-                ) : (
-                  <ChevronRight className="text-gray-400 hover:text-white" size={20} />
-                )}
+                ◀
               </button>
-            </div>
-            
-            {/* Control Panel Section - Only show when open */}
-            {isOpen && (
-              <div className="mb-8">
-                <div className="flex items-center mb-3">
-                  <div className="p-1 bg-green-500/20 rounded-lg mr-3">
-                    <Zap className="text-green-400" size={16} />
-                  </div>
-                  <span className="text-sm font-semibold text-gray-300">Control Panel</span>
-                </div>
-                <div className="text-xs text-green-400 mb-6 pl-8">All systems operational</div>
-              </div>
-            )}
-            
-            {/* Navigation */}
-            <div className="mb-6">
-              {isOpen && (
-                <div className="text-xs font-semibold text-gray-400 mb-4 tracking-wider">NAVIGATION</div>
-              )}
-              <div className="space-y-2">
-                {navigationItems.map((item) => (
-                  <div 
-                    key={item.id}
-                    className={`relative flex items-center ${isOpen ? 'p-3' : 'p-3 justify-center'} rounded-xl cursor-pointer transition-all duration-300 group ${
-                      currentView === item.id 
-                        ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
-                        : 'hover:bg-slate-800/60'
-                    }`}
+            </>
+          ) : (
+            <>
+              {/* Hamburger Menu (when collapsed) */}
+              <button
+                onClick={toggleSidebar}
+                className="p-2 rounded-lg hover:bg-slate-800 transition-colors text-gray-400 hover:text-white mx-auto"
+              >
+                ☰
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Scrollable Section */}
+        <div className="flex-1 overflow-y-auto">
+          <nav className="p-4">
+            <ul className="space-y-2">
+              {menuItems.map((item) => (
+                <li key={item.id}>
+                  <button
                     onClick={() => setCurrentView(item.id)}
-                  >
-                    <div className={`p-2 rounded-lg ${isOpen ? 'mr-3' : ''} ${
+                    className={`w-full flex items-center p-3 rounded-lg transition-all duration-200 group ${
                       currentView === item.id 
-                        ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white' 
-                        : 'bg-slate-700/50 text-gray-400 group-hover:bg-slate-600 group-hover:text-white'
-                    } transition-all duration-300`}>
-                      <item.icon size={16} />
-                    </div>
+                        ? 'bg-blue-600/30 border border-blue-500/50 text-white' 
+                        : 'hover:bg-slate-800 text-gray-300 hover:text-white'
+                    } ${isOpen ? 'justify-start' : 'justify-center'}`}
+                  >
+                    <span className="text-2xl">{item.icon}</span>
                     
-                    {/* Label - only show when sidebar is open */}
                     {isOpen && (
-                      <span className={`font-medium ${
-                        currentView === item.id ? 'text-white' : 'text-gray-300'
-                      }`}>
-                        {item.label}
-                      </span>
-                    )}
-                    
-                    {/* Tooltip for collapsed sidebar */}
-                    {!isOpen && (
-                      <div className="absolute left-full ml-3 bg-slate-800 text-white px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap shadow-xl border border-slate-600">
-                        {item.label}
-                        <div className="absolute left-0 top-1/2 transform -translate-x-1 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45 border-l border-b border-slate-600"></div>
+                      <div className="ml-3 flex-1">
+                        <div className="flex items-center justify-between">
+                          <div className="text-left">
+                            <div className="font-medium">{item.name}</div>
+                            <div className="text-xs opacity-75">{item.description}</div>
+                          </div>
+                          {item.alerts > 0 && (
+                            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
+                              {item.alerts}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     )}
-                  </div>
-                ))}
+                    
+                    {!isOpen && (
+                      <div className="absolute left-20 bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-xl">
+                        {item.name}
+                        {item.alerts > 0 && (
+                          <span className="ml-2 bg-red-500 px-1 rounded-full text-xs">
+                            {item.alerts}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {/* Living Room Status */}
+          {isOpen && room && (
+            <div className="p-4 border-t border-slate-800">
+              <h3 className="text-sm font-semibold mb-3 text-blue-400">Living Room Status</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Power:</span>
+                  <span className="font-medium text-white">{room.powerConsumption || 0}W</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Temperature:</span>
+                  <span className="font-medium text-white">{room.temperature || 24}°C</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Components:</span>
+                  <span className="font-medium text-white">
+                    {room.components?.filter(c => c.status === 'on' || c.status === 'in-use').length || 0}/{room.components?.length || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Status:</span>
+                  <span className={`font-medium px-2 py-1 rounded text-xs ${
+                    room.status === 'normal' ? 'bg-green-500/20 text-green-300' :
+                    room.status === 'overload' ? 'bg-yellow-500/20 text-yellow-300' :
+                    'bg-red-500/20 text-red-300'
+                  }`}>
+                    {room.status?.toUpperCase() || 'NORMAL'}
+                  </span>
+                </div>
               </div>
             </div>
+          )}
+        </div>
 
-            {/* Quick Stats - Only show when sidebar is open */}
-            {isOpen && (
-              <div className="space-y-3">
-                <div className="text-xs font-semibold text-gray-400 mb-4 tracking-wider">QUICK STATS</div>
-                
-                <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 p-3 rounded-xl backdrop-blur-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                      <span className="text-xs font-medium text-gray-300">Rooms Online</span>
-                    </div>
-                    <span className="text-sm font-bold text-green-400">{roomsOnline}/4</span>
-                  </div>
-                </div>
-                
-                <div className="bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20 p-3 rounded-xl backdrop-blur-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-orange-400 rounded-full mr-2 animate-pulse"></div>
-                      <span className="text-xs font-medium text-gray-300">Active Alerts</span>
-                    </div>
-                    <span className="text-sm font-bold text-orange-400">{activeAlerts}</span>
-                  </div>
-                </div>
-                
-                <div className="bg-gradient-to-r from-red-500/10 to-rose-500/10 border border-red-500/20 p-3 rounded-xl backdrop-blur-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-red-400 rounded-full mr-2 animate-pulse"></div>
-                      <span className="text-xs font-medium text-gray-300">Critical Issues</span>
-                    </div>
-                    <span className="text-sm font-bold text-red-400">{criticalIssues}</span>
-                  </div>
-                </div>
+        {/* Footer */}
+        <div className="flex-shrink-0 p-4 border-t border-slate-800">
+          {isOpen ? (
+            <div className="text-center">
+              <div className="text-xs text-gray-400">Last Update</div>
+              <div className="text-sm font-medium text-blue-400">
+                {new Date().toLocaleTimeString()}
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <div className="text-2xl">⚡</div>
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -2,53 +2,70 @@ import React from 'react';
 
 const ShortCircuitAlert = ({ alert, onAcknowledge, onResolve }) => {
   return (
-    <div className="border-2 border-red-500 bg-red-50 rounded-xl p-6 transition-all duration-300 hover:shadow-lg">
+    <div className="border-2 border-red-600 bg-[#1e293b] rounded-xl p-6 transition-all duration-300 hover:shadow-lg">
+      {/* Header */}
       <div className="flex justify-between items-start mb-4">
+        {/* Icon + Title */}
         <div className="flex items-center gap-3">
-          <span className="text-2xl">⚡</span>
+          <span className="text-2xl text-red-400">⚡</span>
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">
+            <h3 className="text-lg font-semibold text-white">
               Short Circuit - {alert.component}
             </h3>
-            <p className="text-sm text-gray-600">{alert.location}</p>
+            <p className="text-sm text-gray-400">{alert.location}</p>
           </div>
         </div>
+
+        {/* Status Pills */}
         <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+          <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-900/40 text-red-300 border border-red-600/40">
             CRITICAL
           </span>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-            alert.status === 'active' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-          }`}>
+          <span
+            className={`px-3 py-1 rounded-full text-sm font-medium ${
+              alert.status === 'active'
+                ? 'bg-red-900/40 text-red-300 border border-red-600/40'
+                : 'bg-green-900/40 text-green-300 border border-green-600/40'
+            }`}
+          >
             {alert.status.toUpperCase()}
           </span>
         </div>
       </div>
 
+      {/* Message & Time */}
       <div className="mb-4">
-        <p className="text-gray-700 mb-2">{alert.message}</p>
+        <p className="text-gray-300 mb-2">{alert.message}</p>
         <p className="text-sm text-gray-500">Time: {alert.timestamp}</p>
       </div>
 
       {/* Technical Details */}
-      <div className="bg-white p-4 rounded-lg mb-4">
-        <h4 className="font-semibold mb-2">🔍 Technical Details:</h4>
+      <div className="bg-[#0f172a] p-4 rounded-lg mb-4 border border-gray-700">
+        <h4 className="font-semibold mb-2 text-red-400">🔍 Technical Details:</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
-            <span className="text-gray-600">Voltage:</span>
-            <div className="font-medium text-red-600">{alert.technicalData?.voltage || 0}V</div>
+            <span className="text-gray-400">Voltage:</span>
+            <div className="font-medium text-red-400">
+              {alert.technicalData?.voltage || 0}V
+            </div>
           </div>
           <div>
-            <span className="text-gray-600">Fault Current:</span>
-            <div className="font-medium text-red-600">{alert.technicalData?.faultCurrent || alert.current}A</div>
+            <span className="text-gray-400">Fault Current:</span>
+            <div className="font-medium text-red-400">
+              {alert.technicalData?.faultCurrent || alert.current}A
+            </div>
           </div>
           <div>
-            <span className="text-gray-600">Resistance:</span>
-            <div className="font-medium text-red-600">{alert.technicalData?.resistance || 0.1}Ω</div>
+            <span className="text-gray-400">Resistance:</span>
+            <div className="font-medium text-red-400">
+              {alert.technicalData?.resistance || 0.1}Ω
+            </div>
           </div>
           <div>
-            <span className="text-gray-600">Power:</span>
-            <div className="font-medium">{alert.technicalData?.power || 0}W</div>
+            <span className="text-gray-400">Power:</span>
+            <div className="font-medium text-white">
+              {alert.technicalData?.power || 0}W
+            </div>
           </div>
         </div>
       </div>
@@ -58,13 +75,13 @@ const ShortCircuitAlert = ({ alert, onAcknowledge, onResolve }) => {
         <div className="flex gap-2">
           <button
             onClick={() => onAcknowledge(alert.id)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Acknowledge
           </button>
           <button
             onClick={() => onResolve(alert.id)}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             Mark Resolved
           </button>
