@@ -37,7 +37,16 @@ const RoomCard = ({ roomName, data }) => {
     }
   };
 
-  const config = getStatusConfig(data.status);
+  // Provide default values if data is not available
+  const safeData = {
+    voltage: data?.voltage || 0,
+    current: data?.current || 0,
+    temperature: data?.temperature || data?.temp || 0,
+    power: data?.power || 0,
+    status: data?.status || 'UNKNOWN'
+  };
+
+  const config = getStatusConfig(safeData.status);
 
   return (
     <div 
@@ -61,15 +70,15 @@ const RoomCard = ({ roomName, data }) => {
           <div className="flex items-center space-x-6 text-gray-300">
             <div className="flex items-center">
               <Zap className="mr-2 text-blue-400" size={18} />
-              <span className="text-lg font-semibold">{data.voltage.toFixed(1)}V</span>
+              <span className="text-lg font-semibold">{safeData.voltage.toFixed(1)}V</span>
             </div>
             <div className="flex items-center">
               <Activity className="mr-2 text-green-400" size={18} />
-              <span className="text-lg font-semibold">{data.current.toFixed(1)}A</span>
+              <span className="text-lg font-semibold">{safeData.current.toFixed(1)}A</span>
             </div>
             <div className="flex items-center">
               <Thermometer className="mr-2 text-orange-400" size={18} />
-              <span className="text-lg font-semibold">{data.temp}°C</span>
+              <span className="text-lg font-semibold">{safeData.temperature.toFixed(1)}°C</span>
             </div>
           </div>
         </div>
@@ -78,16 +87,17 @@ const RoomCard = ({ roomName, data }) => {
         <div className="flex items-center justify-between">
           <div>
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-              {data.power}W
+              {safeData.power.toFixed(0)}W
             </div>
             <div className="text-sm text-gray-400">Power Consumption</div>
           </div>
           <div className={`px-4 py-2 rounded-xl text-sm font-bold ${
-            data.status === 'NORMAL' ? 'bg-green-500/20 text-green-400' :
-            data.status === 'WARNING' ? 'bg-yellow-500/20 text-yellow-400' :
-            'bg-red-500/20 text-red-400'
+            safeData.status === 'NORMAL' ? 'bg-green-500/20 text-green-400' :
+            safeData.status === 'WARNING' ? 'bg-yellow-500/20 text-yellow-400' :
+            safeData.status === 'CRITICAL' ? 'bg-red-500/20 text-red-400' :
+            'bg-gray-500/20 text-gray-400'
           }`}>
-            {data.status}
+            {safeData.status}
           </div>
         </div>
       </div>
@@ -95,13 +105,12 @@ const RoomCard = ({ roomName, data }) => {
   );
 };
 
-const HomeLayoutMonitor = ({ roomData }) => {
+const HomeLayoutMonitor = ({ livingRoomData }) => {
   return (
-    <div className="grid grid-cols-2 gap-8 max-w-7xl mx-auto">
-      <RoomCard roomName="Living Room" data={roomData.livingRoom} />
-      <RoomCard roomName="Kitchen" data={roomData.kitchen} />
-      <RoomCard roomName="Bedroom" data={roomData.bedroom} />
-      <RoomCard roomName="Bathroom" data={roomData.bathroom} />
+    <div className="flex justify-center max-w-7xl mx-auto">
+      <div className="w-full max-w-lg">
+        <RoomCard roomName="Living Room" data={livingRoomData} />
+      </div>
     </div>
   );
 };

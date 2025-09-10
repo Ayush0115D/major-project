@@ -2,26 +2,22 @@ import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import DashboardView from './views/DashboardView';
-import RoomStatusCards from './components/RoomStatusCards';
 import SystemAlerts from './components/SystemAlerts';
 import MonitoringView from './views/MonitoringView';
-import AnalyticsView from './views/AnalyticsView';
 import SettingsView from './views/SettingsView';
+import SafetyProtocols from './components/SafetyProtocols';
+
 import { useSmartMonitorData } from "../hooks/useSmartMonitorData.js";
+
 const SmartMonitor = () => {
   const [currentView, setCurrentView] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  
+ 
   const {
     roomData,
     alerts,
     systemStats,
-    powerData,
     currentTime,
-    totalPower,
-    avgVoltage,
-    totalCurrent,
-    efficiency,
     toggleComponent,
     acknowledgeAlert,
     resolveAlert
@@ -35,28 +31,15 @@ const SmartMonitor = () => {
     switch(currentView) {
       case 'dashboard':
         return <DashboardView roomData={roomData} alerts={alerts} systemStats={systemStats} />;
-      case 'room-status':
-        return <RoomStatusCards roomData={roomData} alerts={alerts} isOpen={true} />;
       case 'monitoring':
         return <MonitoringView roomData={roomData} />;
       case 'alerts':
         return (
-          <SystemAlerts 
-            alerts={alerts} 
-            acknowledgeAlert={acknowledgeAlert} 
-            resolveAlert={resolveAlert} 
-            isOpen={true} 
-          />
-        );
-      case 'analytics':
-        return (
-          <AnalyticsView
-            roomData={roomData}
-            powerData={powerData}
-            totalPower={totalPower}
-            avgVoltage={avgVoltage}
-            totalCurrent={totalCurrent}
-            efficiency={efficiency}
+          <SystemAlerts
+            alerts={alerts}
+            acknowledgeAlert={acknowledgeAlert}
+            resolveAlert={resolveAlert}
+            isOpen={true}
           />
         );
       case 'settings':
@@ -68,13 +51,13 @@ const SmartMonitor = () => {
             <p className="text-gray-400">Historical data and trends coming soon...</p>
           </div>
         );
-      case 'safety':
-        return (
-          <div className="p-8">
-            <h1 className="text-3xl font-bold text-white mb-4">Safety Protocols</h1>
-            <p className="text-gray-400">Safety management features coming soon...</p>
-          </div>
-        );
+ case 'safety':
+  return (
+    <div className="p-8">
+      <h1 className="text-3xl font-bold text-white mb-6"></h1>
+      <SafetyProtocols />
+    </div>
+  );
       default:
         return <DashboardView roomData={roomData} alerts={alerts} systemStats={systemStats} />;
     }

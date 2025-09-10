@@ -8,7 +8,6 @@ const Sidebar = ({ currentView, setCurrentView, roomData, alerts, isOpen, toggle
     { id: 'room-status', name: 'Living Room', icon: '🛋️', description: `${room?.components?.length || 0} Components`, alerts: alerts.filter(a => a.location === 'Living Room' && a.status === 'active').length },
     { id: 'monitoring', name: 'Real-time Monitor', icon: '📊', description: 'Live Data Stream' },
     { id: 'alerts', name: 'System Alerts', icon: '🚨', description: 'Fault Management', alerts: alerts.filter(alert => alert.status === 'active').length },
-    { id: 'analytics', name: 'Analytics', icon: '📈', description: 'Power Analysis' },
     { id: 'history', name: 'History', icon: '📜', description: 'Historical Data' },
     { id: 'safety', name: 'Safety', icon: '🛡️', description: 'Safety Protocols' },
     { id: 'settings', name: 'Settings', icon: '⚙️', description: 'System Config' }

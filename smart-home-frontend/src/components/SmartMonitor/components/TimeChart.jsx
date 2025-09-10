@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, TrendingUp, TrendingDown } from 'lucide-react';
 
-const TimeChart = ({ roomData }) => {
+const TimeChart = ({ livingRoomData }) => {
   const [timelineData, setTimelineData] = useState([]);
   const [selectedTimeIndex, setSelectedTimeIndex] = useState(null);
 
@@ -11,14 +11,14 @@ const TimeChart = ({ roomData }) => {
       const data = [];
       const now = new Date();
       
+      // Get base power from living room data with fallback
+      const basePower = livingRoomData?.power || 2000; // Default to 2000W if no data
+      
       for (let i = 11; i >= 0; i--) {
         const time = new Date(now.getTime() - (i * 60 * 60 * 1000));
         const hour = time.getHours();
         
-        // Calculate total power based on current room data with hourly variations
-        const baseTotalPower = Object.values(roomData).reduce((sum, room) => sum + room.power, 0);
-        
-        // Add realistic hourly variations
+        // Add realistic hourly variations for living room
         let hourMultiplier = 1;
         if (hour >= 6 && hour <= 9) hourMultiplier = 1.3; // Morning peak
         else if (hour >= 18 && hour <= 22) hourMultiplier = 1.5; // Evening peak
@@ -26,7 +26,7 @@ const TimeChart = ({ roomData }) => {
         else if (hour >= 12 && hour <= 17) hourMultiplier = 1.1; // Afternoon
         
         const variation = (Math.random() - 0.5) * 0.2;
-        const totalPower = Math.round(baseTotalPower * (hourMultiplier + variation));
+        const totalPower = Math.round(basePower * (hourMultiplier + variation));
         
         data.push({
           time: time.toLocaleTimeString('en-US', { 
@@ -37,19 +37,23 @@ const TimeChart = ({ roomData }) => {
           hour,
           totalPower,
           timestamp: time,
-          status: totalPower > baseTotalPower * 1.2 ? 'high' : 
-                  totalPower < baseTotalPower * 0.8 ? 'low' : 'normal'
+          status: totalPower > basePower * 1.2 ? 'high' : 
+                  totalPower < basePower * 0.8 ? 'low' : 'normal'
         });
       }
       return data;
     };
 
-    setTimelineData(generateTimelineData());
-  }, [roomData]);
+    // Only generate data if we have livingRoomData
+    if (livingRoomData) {
+      setTimelineData(generateTimelineData());
+    }
+  }, [livingRoomData]);
 
-  const maxPower = Math.max(...timelineData.map(d => d.totalPower));
-  const minPower = Math.min(...timelineData.map(d => d.totalPower));
-  const currentPower = Object.values(roomData).reduce((sum, room) => sum + room.power, 0);
+  // Safe data extraction with fallbacks
+  const maxPower = timelineData.length > 0 ? Math.max(...timelineData.map(d => d.totalPower)) : 0;
+  const minPower = timelineData.length > 0 ? Math.min(...timelineData.map(d => d.totalPower)) : 0;
+  const currentPower = livingRoomData?.power || 0;
   const trend = timelineData.length > 1 ? 
     timelineData[timelineData.length - 1].totalPower - timelineData[0].totalPower : 0;
 
@@ -61,6 +65,17 @@ const TimeChart = ({ roomData }) => {
     }
   };
 
+  // Show loading state if no data
+  if (!livingRoomData || timelineData.length === 0) {
+    return (
+      <div className="mb-10 bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
+        <div className="flex items-center justify-center h-32">
+          <div className="text-gray-400">Loading timeline data...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mb-10 bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
       {/* Header */}
@@ -69,13 +84,13 @@ const TimeChart = ({ roomData }) => {
           <Activity className="text-blue-400 mr-3" size={24} />
           <div>
             <h3 className="text-xl font-bold text-white">12-Hour Power Timeline</h3>
-            <p className="text-gray-400 text-sm">Real-time consumption patterns</p>
+            <p className="text-gray-400 text-sm">Living room consumption patterns</p>
           </div>
         </div>
         <div className="flex items-center space-x-6">
           <div className="text-right">
             <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-              {currentPower}W
+              {Math.round(currentPower)}W
             </div>
             <div className="text-xs text-gray-400 flex items-center">
               {trend > 0 ? (
@@ -83,7 +98,7 @@ const TimeChart = ({ roomData }) => {
               ) : (
                 <TrendingDown className="mr-1 text-red-400" size={12} />
               )}
-              {trend > 0 ? '+' : ''}{trend}W trend
+              {trend > 0 ? '+' : ''}{Math.round(trend)}W trend
             </div>
           </div>
           <div className="text-right">
@@ -120,7 +135,7 @@ const TimeChart = ({ roomData }) => {
         {/* Power Visualization Bars */}
         <div className="flex justify-between items-end h-16 mb-4 px-2">
           {timelineData.map((data, i) => {
-            const height = ((data.totalPower - minPower) / (maxPower - minPower)) * 100;
+            const height = maxPower > minPower ? ((data.totalPower - minPower) / (maxPower - minPower)) * 100 : 50;
             return (
               <div
                 key={i}
