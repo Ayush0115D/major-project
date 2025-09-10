@@ -5,12 +5,16 @@ const RoomStatusCards = ({ roomData, alerts, isOpen }) => {
   const room = roomData['living-room'];
   if (!room) return null;
 
-  const activeComponents = room.components.filter(comp => comp.status === 'on' || comp.status === 'in-use');
+  const activeComponents = room.components.filter(
+    comp => comp.status === 'on' || comp.status === 'in-use'
+  );
   const totalPower = activeComponents.reduce((sum, comp) => sum + comp.power, 0);
 
-  const roomAlerts = alerts.filter(alert =>
-    alert.location === room.name &&
-    (alert.type === 'short-circuit' || alert.type === 'overload')
+  // ✅ Fix: use includes() instead of ===
+  const roomAlerts = alerts.filter(
+    alert =>
+      alert.location.includes(room.name) &&
+      (alert.type === 'short-circuit' || alert.type === 'overload')
   );
 
   const hasShortCircuit = roomAlerts.some(alert => alert.type === 'short-circuit');
@@ -30,8 +34,9 @@ const RoomStatusCards = ({ roomData, alerts, isOpen }) => {
 
   return (
     <div className={`${isOpen ? 'block' : 'hidden'} p-6 bg-[#0f172a] min-h-screen`}>
-      <div className={`border-2 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.01] ${getStatusColor()}`}>
-        
+      <div
+        className={`border-2 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.01] ${getStatusColor()}`}
+      >
         {/* Room Header */}
         <div className="p-6 border-b border-gray-700">
           <div className="flex justify-between items-center">
@@ -40,7 +45,15 @@ const RoomStatusCards = ({ roomData, alerts, isOpen }) => {
               <p className="text-gray-400">Total Components: {room.components.length}</p>
             </div>
             <div className="text-right">
-              <div className={`text-xl font-semibold ${hasShortCircuit ? 'text-red-400' : hasOverload ? 'text-yellow-400' : 'text-blue-400'}`}>
+              <div
+                className={`text-xl font-semibold ${
+                  hasShortCircuit
+                    ? 'text-red-400'
+                    : hasOverload
+                    ? 'text-yellow-400'
+                    : 'text-blue-400'
+                }`}
+              >
                 {getStatusText()}
               </div>
               <div className="text-lg text-gray-300">{totalPower}W</div>
@@ -74,7 +87,7 @@ const RoomStatusCards = ({ roomData, alerts, isOpen }) => {
         <div className="p-6">
           <h3 className="text-lg font-semibold mb-4 text-white">Room Components</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {room.components.map((component) => (
+            {room.components.map(component => (
               <ComponentCard key={component.id} component={component} />
             ))}
           </div>

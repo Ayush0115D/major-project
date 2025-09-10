@@ -31,6 +31,18 @@ export const useSmartMonitorData = () => {
       timestamp: new Date(Date.now() - 600000).toLocaleString(),
       status: 'active',
       technicalData: { voltage: 230, current: 8.2, maxLoad: 1500, currentLoad: 1850, overloadPercentage: 23.3 }
+    },
+    {
+      id: 2,
+      type: 'short-circuit',   // ✅ matches your filter
+      severity: 'critical',
+      location: 'Living Room - Socket 1',
+      component: 'Power Socket 1',
+      componentId: 'socket1',
+      message: 'Short circuit detected at socket 1. Immediate attention required!',
+      timestamp: new Date().toLocaleString(),
+      status: 'active',
+      technicalData: { voltage: 230, faultCurrent: 15, resistance: 0.05, power: 3450 }
     }
   ]);
 
@@ -53,8 +65,13 @@ export const useSmartMonitorData = () => {
         const updatedData = { ...prevData };
         const room = updatedData['living-room'];
 
+        // Temperature rounded to 1 decimal
         room.temperature = +(24.5 + (Math.random() - 0.5) * 2).toFixed(1);
-        room.humidity = Math.max(40, Math.min(60, 45 + (Math.random() - 0.5) * 10));
+
+        // ✅ Fix: Humidity rounded to 2 decimals
+        room.humidity = +(
+          Math.max(40, Math.min(60, 45 + (Math.random() - 0.5) * 10))
+        ).toFixed(2);
 
         room.components = room.components.map(component => {
           if (component.status === 'on' || component.status === 'in-use') {

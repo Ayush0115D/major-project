@@ -1,16 +1,29 @@
 import React from 'react';
+import { Home } from "lucide-react"; 
 
 const DashboardView = ({ roomData, alerts, systemStats }) => {
   const room = roomData['living-room'];
   const activeAlerts = alerts.filter(a => a.status === 'active');
   const shortCircuitAlerts = activeAlerts.filter(a => a.type === 'short-circuit');
   const overloadAlerts = activeAlerts.filter(a => a.type === 'overload');
-
-  return (
+return (
     <div className="p-8 space-y-6">
+      {/* Dashboard Heading */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="flex items-center gap-3 text-3xl font-extrabold text-slate-200 drop-shadow-sm">
+          <Home className="text-blue-400" size={32} />
+          <span className="bg-gradient-to-r from-blue-300 via-cyan-200 to-purple-300 bg-clip-text text-transparent">
+            Smart Home Dashboard
+          </span>
+        </h1>
+        <span className="text-sm text-gray-400">
+          Last updated: {new Date().toLocaleString()}
+        </span>
+      </div>
+
       {/* System Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
+        <div className="bg-gradient-to-r from-blue-700 to-blue-800 text-white p-6 rounded-xl shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold">Total Power</h3>
@@ -21,7 +34,7 @@ const DashboardView = ({ roomData, alerts, systemStats }) => {
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
+        <div className="bg-gradient-to-r from-green-700 to-green-800 text-white p-6 rounded-xl shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold">System Health</h3>
@@ -32,7 +45,7 @@ const DashboardView = ({ roomData, alerts, systemStats }) => {
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-xl shadow-lg">
+        <div className="bg-gradient-to-r from-red-700 to-red-800 text-white p-6 rounded-xl shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold">Active Alerts</h3>
@@ -43,7 +56,7 @@ const DashboardView = ({ roomData, alerts, systemStats }) => {
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
+        <div className="bg-gradient-to-r from-purple-700 to-purple-800 text-white p-6 rounded-xl shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold">Components</h3>
