@@ -5,7 +5,13 @@ const Sidebar = ({ currentView, setCurrentView, roomData, alerts, isOpen, toggle
 
   const menuItems = [
     { id: 'dashboard', name: 'Dashboard', icon: '🏠', description: 'System Overview' },
-    { id: 'room-status', name: 'Living Room', icon: '🛋️', description: `${room?.components?.length || 0} Components`, alerts: alerts.filter(a => a.location === 'Living Room' && a.status === 'active').length },
+    { 
+      id: 'living-room', // 👈 fixed: was "room-status"
+      name: 'Living Room', 
+      icon: '🛋️', 
+      description: `${room?.components?.length || 0} Components`, 
+      alerts: alerts.filter(a => a.location === 'Living Room' && a.status === 'active').length 
+    },
     { id: 'monitoring', name: 'Real-time Monitor', icon: '📊', description: 'Live Data Stream' },
     { id: 'alerts', name: 'System Alerts', icon: '🚨', description: 'Fault Management', alerts: alerts.filter(alert => alert.status === 'active').length },
     { id: 'history', name: 'History', icon: '📜', description: 'Historical Data' },
@@ -29,8 +35,8 @@ const Sidebar = ({ currentView, setCurrentView, roomData, alerts, isOpen, toggle
       }`}>
         
         {/* Top Section */}
-       <div className="flex-shrink-0 p-4 border-b border-slate-800 flex items-center justify-between">
-        {isOpen ? (
+        <div className="flex-shrink-0 p-4 border-b border-slate-800 flex items-center justify-between">
+          {isOpen ? (
             <>
               {/* Branding */}
               <div className="flex items-center space-x-2">

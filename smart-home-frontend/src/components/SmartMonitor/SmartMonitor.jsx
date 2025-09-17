@@ -6,13 +6,14 @@ import SystemAlerts from './components/SystemAlerts';
 import MonitoringView from './views/MonitoringView';
 import SettingsView from './views/SettingsView';
 import SafetyProtocols from './components/SafetyProtocols';
+import LivingRoomView from './views/LivingRoomView';
 
 import { useSmartMonitorData } from "../hooks/useSmartMonitorData.js";
 
 const SmartMonitor = () => {
   const [currentView, setCurrentView] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
- 
+
   const {
     roomData,
     alerts,
@@ -28,11 +29,33 @@ const SmartMonitor = () => {
   };
 
   const renderCurrentView = () => {
-    switch(currentView) {
+    switch (currentView) {
       case 'dashboard':
-        return <DashboardView roomData={roomData} alerts={alerts} systemStats={systemStats} />;
+        return (
+          <DashboardView
+            roomData={roomData}
+            alerts={alerts}
+            systemStats={systemStats}
+          />
+        );
+
+      case 'living-room':
+        return (
+          <LivingRoomView
+            roomData={roomData}
+            alerts={alerts}
+          />
+        );
+
       case 'monitoring':
-        return <MonitoringView roomData={roomData} />;
+        return (
+          <MonitoringView
+            roomData={roomData}
+            alerts={alerts}
+            systemStats={systemStats}
+          />
+        );
+
       case 'alerts':
         return (
           <SystemAlerts
@@ -42,29 +65,47 @@ const SmartMonitor = () => {
             isOpen={true}
           />
         );
+
       case 'settings':
-        return <SettingsView toggleComponent={toggleComponent} roomData={roomData} />;
+        return (
+          <SettingsView
+            toggleComponent={toggleComponent}
+            roomData={roomData}
+          />
+        );
+
       case 'history':
         return (
           <div className="p-8">
             <h1 className="text-3xl font-bold text-white mb-4">History</h1>
-            <p className="text-gray-400">Historical data and trends coming soon...</p>
+            <p className="text-gray-400">
+              Historical data and trends coming soon...
+            </p>
           </div>
         );
- case 'safety':
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-white mb-6"></h1>
-      <SafetyProtocols />
-    </div>
-  );
+
+      case 'safety':
+        return (
+          <div className="p-8">
+            <h1 className="text-3xl font-bold text-white mb-6">Safety Protocols</h1>
+            <SafetyProtocols />
+          </div>
+        );
+
       default:
-        return <DashboardView roomData={roomData} alerts={alerts} systemStats={systemStats} />;
+        return (
+          <DashboardView
+            roomData={roomData}
+            alerts={alerts}
+            systemStats={systemStats}
+          />
+        );
     }
   };
 
   return (
     <div className="flex bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 min-h-screen">
+      {/* Sidebar */}
       <Sidebar
         currentView={currentView}
         setCurrentView={handleNavigation}
@@ -73,8 +114,13 @@ const SmartMonitor = () => {
         isOpen={sidebarOpen}
         toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
-     
-      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
+
+      {/* Main content */}
+      <div
+        className={`flex-1 transition-all duration-300 ${
+          sidebarOpen ? 'ml-72' : 'ml-20'
+        }`}
+      >
         <Header
           currentTime={currentTime}
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
@@ -82,7 +128,8 @@ const SmartMonitor = () => {
           systemStats={systemStats}
           alerts={alerts}
         />
-       
+
+        {/* Dynamic views */}
         <div className="overflow-auto h-[calc(100vh-80px)]">
           {renderCurrentView()}
         </div>
