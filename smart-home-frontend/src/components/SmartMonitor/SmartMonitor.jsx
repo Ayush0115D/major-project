@@ -7,12 +7,12 @@ import MonitoringView from './views/MonitoringView';
 import SettingsView from './views/SettingsView';
 import SafetyProtocols from './components/SafetyProtocols';
 import LivingRoomView from './views/LivingRoomView';
-
 import { useSmartMonitorData } from "../hooks/useSmartMonitorData.js";
 
 const SmartMonitor = () => {
   const [currentView, setCurrentView] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [theme, setTheme] = useState('dark'); // Add theme state
 
   const {
     roomData,
@@ -36,26 +36,26 @@ const SmartMonitor = () => {
             roomData={roomData}
             alerts={alerts}
             systemStats={systemStats}
+            theme={theme}
           />
         );
-
       case 'living-room':
         return (
           <LivingRoomView
             roomData={roomData}
             alerts={alerts}
+            theme={theme}
           />
         );
-
       case 'monitoring':
         return (
           <MonitoringView
             roomData={roomData}
             alerts={alerts}
             systemStats={systemStats}
+            theme={theme}
           />
         );
-
       case 'alerts':
         return (
           <SystemAlerts
@@ -63,48 +63,56 @@ const SmartMonitor = () => {
             acknowledgeAlert={acknowledgeAlert}
             resolveAlert={resolveAlert}
             isOpen={true}
+            theme={theme}
           />
         );
-
       case 'settings':
         return (
           <SettingsView
             toggleComponent={toggleComponent}
             roomData={roomData}
+            theme={theme}
+            setTheme={setTheme}
           />
         );
-
       case 'history':
         return (
           <div className="p-8">
-            <h1 className="text-3xl font-bold text-white mb-4">History</h1>
-            <p className="text-gray-400">
+            <h1 className={`text-3xl font-bold mb-4 ${
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            }`}>History</h1>
+            <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
               Historical data and trends coming soon...
             </p>
           </div>
         );
-
       case 'safety':
         return (
           <div className="p-8">
-            <h1 className="text-3xl font-bold text-white mb-6">Safety Protocols</h1>
-            <SafetyProtocols />
+            <h1 className={`text-3xl font-bold mb-6 ${
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            }`}></h1>
+            <SafetyProtocols theme={theme} />
           </div>
         );
-
       default:
         return (
           <DashboardView
             roomData={roomData}
             alerts={alerts}
             systemStats={systemStats}
+            theme={theme}
           />
         );
     }
   };
 
   return (
-    <div className="flex bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 min-h-screen">
+    <div className={`flex min-h-screen transition-colors duration-300 ${
+      theme === 'dark' 
+        ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900' 
+        : 'bg-gradient-to-br from-gray-100 via-slate-100 to-gray-200'
+    }`}>
       {/* Sidebar */}
       <Sidebar
         currentView={currentView}
@@ -113,6 +121,7 @@ const SmartMonitor = () => {
         alerts={alerts}
         isOpen={sidebarOpen}
         toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        theme={theme}
       />
 
       {/* Main content */}
@@ -127,6 +136,7 @@ const SmartMonitor = () => {
           sidebarOpen={sidebarOpen}
           systemStats={systemStats}
           alerts={alerts}
+          theme={theme}
         />
 
         {/* Dynamic views */}

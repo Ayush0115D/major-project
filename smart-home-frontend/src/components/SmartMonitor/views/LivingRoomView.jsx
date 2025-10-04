@@ -1,5 +1,4 @@
 import React from "react";
-
 const getStatusColor = (status) => {
   switch (status) {
     case "on":
@@ -71,13 +70,15 @@ const LivingRoomView = ({ roomData, alerts }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {livingRoom.components.map((component) => (
           <div
-            key={component.id}
-            className={`bg-gray-900 p-4 rounded-lg border shadow-sm transition hover:shadow-md ${
-              component.status === "short-circuit"
-                ? "border-red-600"
-                : "border-gray-700"
-            }`}
-          >
+        key={component.id}
+       className={`bg-gray-900 p-4 rounded-lg border shadow-sm transition hover:shadow-md ${
+        component.status === "short-circuit"
+      ? "border-red-600"
+      : component.status === "on"
+      ? "border-green-600"
+      : "border-gray-700"
+      }`}
+      >
             <div className="flex justify-between items-start mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-lg">{getComponentIcon(component.type)}</span>
