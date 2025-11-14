@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+const API_BASE_URL = 'http://localhost:5000/api';
+
 export const useSmartMonitorData = () => {
   const [roomData, setRoomData] = useState({
     'living-room': {
@@ -7,137 +9,173 @@ export const useSmartMonitorData = () => {
       name: 'Living Room',
       temperature: 24.5,
       humidity: 45,
-      powerConsumption: 99,
+      powerConsumption: 0,
       status: 'normal',
       components: [
-        { id: 'light1', name: 'LED Light 1', type: 'lighting', power: 12, voltage: 230, current: 0.052, status: 'on', location: 'ceiling' },
-        { id: 'light2', name: 'LED Light 2', type: 'lighting', power: 12, voltage: 230, current: 0.052, status: 'on', location: 'wall' },
-        { id: 'fan', name: 'Ceiling Fan', type: 'appliance', power: 75, voltage: 230, current: 0.326, status: 'on', location: 'ceiling' },
-        { id: 'socket1', name: 'Power Socket 1', type: 'outlet', power: 0, voltage: 230, current: 0, status: 'available', location: 'wall' }
+        { id: 'load1', name: 'Load 1', type: 'appliance', power: 0, voltage: 230, current: 0, status: 'off', location: 'circuit-1', fault: false },
+        { id: 'load2', name: 'Load 2', type: 'appliance', power: 0, voltage: 230, current: 0, status: 'off', location: 'circuit-2', fault: false },
+        { id: 'load3', name: 'Load 3', type: 'appliance', power: 0, voltage: 230, current: 0, status: 'off', location: 'circuit-3', fault: false }
       ],
       lastUpdated: new Date().toISOString()
     }
   });
 
-  const [alerts, setAlerts] = useState([
-    {
-      id: 1,
-      type: 'overload',
-      severity: 'warning',
-      location: 'Living Room',
-      component: 'Main Circuit',
-      componentId: 'main-circuit',
-      message: 'Power consumption exceeds safe limits. Total load: 1850W',
-      timestamp: new Date(Date.now() - 600000).toLocaleString(),
-      status: 'active',
-      technicalData: { voltage: 230, current: 8.2, maxLoad: 1500, currentLoad: 1850, overloadPercentage: 23.3 }
-    },
-    {
-      id: 2,
-      type: 'short-circuit',   // ✅ matches your filter
-      severity: 'critical',
-      location: 'Living Room - Socket 1',
-      component: 'Power Socket 1',
-      componentId: 'socket1',
-      message: 'Short circuit detected at socket 1. Immediate attention required!',
-      timestamp: new Date().toLocaleString(),
-      status: 'active',
-      technicalData: { voltage: 230, faultCurrent: 15, resistance: 0.05, power: 3450 }
-    }
-  ]);
+  const [alerts, setAlerts] = useState([]);
 
   const [systemStats, setSystemStats] = useState({
-    totalPower: 99,
+    totalPower: 0,
     totalVoltage: 230,
-    totalCurrent: 0.43,
+    totalCurrent: 0,
     efficiency: 94.5,
-    activeComponents: 3,
-    totalComponents: 4,
-    activeAlerts: 1,
-    systemHealth: 85,
+    activeComponents: 0,
+    totalComponents: 3,
+    activeAlerts: 0,
+    systemHealth: 100,
     lastUpdate: new Date().toISOString()
   });
 
-  // Update data periodically
-  useEffect(() => {
-    const interval = setInterval(() => {
+  const [isConnected, setIsConnected] = useState(false);
+
+  // Fetch real-time data from backend (which gets it from ESP32)
+  const fetchHardwareData = async () => {
+    try {
+      // Fetch room data
+      const roomResponse = await fetch(`${API_BASE_URL}/room/living-room`);
+      const roomDataFromAPI = await roomResponse.json();
+
+      // Fetch alerts
+      const alertsResponse = await fetch(`${API_BASE_URL}/alerts`);
+      const alertsData = await alertsResponse.json();
+
+      // Fetch system stats
+      const statsResponse = await fetch(`${API_BASE_URL}/system/stats`);
+      const statsData = await statsResponse.json();
+
+      // Update room data with real hardware values
       setRoomData(prevData => {
         const updatedData = { ...prevData };
         const room = updatedData['living-room'];
+        const hwRoom = roomDataFromAPI.livingRoom;
 
-        // Temperature rounded to 1 decimal
-        room.temperature = +(24.5 + (Math.random() - 0.5) * 2).toFixed(1);
+        room.temperature = hwRoom.temperature.toFixed(1);
+        room.powerConsumption = Math.round(hwRoom.power);
+        room.status = hwRoom.status.toLowerCase();
+        room.lastUpdated = hwRoom.lastUpdated;
 
-        // ✅ Fix: Humidity rounded to 2 decimals
-        room.humidity = +(
-          Math.max(40, Math.min(60, 45 + (Math.random() - 0.5) * 10))
-        ).toFixed(2);
+        // Update components based on hardware loads
+        room.components = room.components.map((component, index) => {
+          const loadKey = `load${index + 1}`;
+          const loadData = hwRoom.loads[loadKey];
 
-        room.components = room.components.map(component => {
-          if (component.status === 'on' || component.status === 'in-use') {
-            return {
-              ...component,
-              current: +(component.current + (Math.random() - 0.5) * 0.01).toFixed(3),
-              voltage: component.id !== 'socket1' ? +(230 + (Math.random() - 0.5) * 5).toFixed(1) : 0
-            };
-          }
-          return component;
+          return {
+            ...component,
+            status: loadData.fault ? 'fault' : (loadData.class === 'success' ? 'on' : 'off'),
+            power: loadData.fault ? 0 : Math.round(hwRoom.power / 3), // Distribute power
+            voltage: hwRoom.voltage.toFixed(1),
+            current: (hwRoom.current / 3).toFixed(3), // Distribute current
+            fault: loadData.fault,
+            faultMessage: loadData.status
+          };
         });
 
-        room.powerConsumption = room.components
-          .filter(comp => comp.status === 'on' || comp.status === 'in-use')
-          .reduce((sum, comp) => sum + comp.power, 0);
-
-        room.lastUpdated = new Date().toISOString();
         return updatedData;
       });
-    }, 5000);
+
+      // Update alerts with real data
+      setAlerts(alertsData.alerts.map(alert => ({
+        id: alert.id,
+        type: alert.type,
+        severity: alert.severity,
+        location: 'Living Room',
+        component: alert.type === 'short_circuit' ? 'Main Circuit' : `Load ${Object.keys(alert.loads).find(k => alert.loads[k])}`,
+        componentId: alert.type === 'short_circuit' ? 'main-circuit' : Object.keys(alert.loads).find(k => alert.loads[k]),
+        message: alert.message,
+        timestamp: new Date(alert.timestamp).toLocaleString(),
+        status: alert.status,
+        technicalData: {
+          voltage: roomDataFromAPI.livingRoom.voltage,
+          current: roomDataFromAPI.livingRoom.current,
+          power: roomDataFromAPI.livingRoom.power
+        }
+      })));
+
+      // Update system stats
+      setSystemStats({
+        totalPower: Math.round(statsData.totalPower),
+        totalVoltage: 230,
+        totalCurrent: roomDataFromAPI.livingRoom.current.toFixed(2),
+        efficiency: 94.5,
+        activeComponents: Object.values(statsData.loads).filter(l => l === 'normal').length,
+        totalComponents: 3,
+        activeAlerts: statsData.activeAlerts,
+        systemHealth: statsData.shortCircuit ? 0 : (statsData.activeAlerts > 0 ? 50 : 100),
+        lastUpdate: new Date().toISOString()
+      });
+
+      setIsConnected(true);
+
+    } catch (error) {
+      console.error('Error fetching hardware data:', error);
+      setIsConnected(false);
+    }
+  };
+
+  // Poll hardware data every 2 seconds
+  useEffect(() => {
+    // Initial fetch
+    fetchHardwareData();
+
+    // Set up polling
+    const interval = setInterval(() => {
+      fetchHardwareData();
+    }, 2000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const toggleComponent = (componentId) => {
-    setRoomData(prevData => {
-      const updatedData = { ...prevData };
-      const room = updatedData['living-room'];
+  const toggleComponent = async (componentId) => {
+    // Note: ESP32 controls relay switching, so this is just for UI feedback
+    // In a full implementation, you'd send commands to ESP32 to control relays
+    console.log(`Toggle component ${componentId} - Hardware controlled`);
+    
+    // You can add an API endpoint to send commands to ESP32 if needed
+    // await fetch(`${API_BASE_URL}/control/${componentId}/toggle`, { method: 'POST' });
+  };
 
-      room.components = room.components.map(component => {
-        if (component.id === componentId) {
-          const newStatus = component.status === 'on' ? 'off' : 'on';
-          const powerMap = { lighting: 12, appliance: 75, electronics: 120, hvac: 1500 };
-          return {
-            ...component,
-            status: newStatus,
-            power: newStatus === 'on' ? powerMap[component.type] || 0 : 0,
-            current: newStatus === 'on' ? (powerMap[component.type] || 0) / 230 : 0,
-            voltage: newStatus === 'on' ? 230 : 0
-          };
-        }
-        return component;
+  const acknowledgeAlert = async (alertId) => {
+    try {
+      await fetch(`${API_BASE_URL}/alerts/${alertId}/acknowledge`, {
+        method: 'PUT'
       });
-
-      return updatedData;
-    });
+      
+      setAlerts(prevAlerts =>
+        prevAlerts.map(alert =>
+          alert.id === alertId
+            ? { ...alert, status: 'acknowledged', acknowledgedAt: new Date().toLocaleString() }
+            : alert
+        )
+      );
+    } catch (error) {
+      console.error('Error acknowledging alert:', error);
+    }
   };
 
-  const acknowledgeAlert = (alertId) => {
-    setAlerts(prevAlerts =>
-      prevAlerts.map(alert =>
-        alert.id === alertId
-          ? { ...alert, status: 'acknowledged', acknowledgedAt: new Date().toLocaleString() }
-          : alert
-      )
-    );
-  };
-
-  const resolveAlert = (alertId) => {
-    setAlerts(prevAlerts =>
-      prevAlerts.map(alert =>
-        alert.id === alertId
-          ? { ...alert, status: 'resolved', resolvedAt: new Date().toLocaleString() }
-          : alert
-      )
-    );
+  const resolveAlert = async (alertId) => {
+    try {
+      await fetch(`${API_BASE_URL}/alerts/${alertId}/resolve`, {
+        method: 'PUT'
+      });
+      
+      setAlerts(prevAlerts =>
+        prevAlerts.map(alert =>
+          alert.id === alertId
+            ? { ...alert, status: 'resolved', resolvedAt: new Date().toLocaleString() }
+            : alert
+        )
+      );
+    } catch (error) {
+      console.error('Error resolving alert:', error);
+    }
   };
 
   return {
@@ -146,6 +184,7 @@ export const useSmartMonitorData = () => {
     systemStats,
     toggleComponent,
     acknowledgeAlert,
-    resolveAlert
+    resolveAlert,
+    isConnected
   };
 };
