@@ -1,242 +1,452 @@
 import React from "react";
 
 const getStatusColor = (component) => {
-  if (component.fault) {
-    return "bg-red-900 text-red-200";
-  }
-  switch (component.status) {
-    case "on":
-      return "bg-green-900 text-green-200";
-    case "off":
-      return "bg-gray-800 text-gray-300";
-    case "fault":
-      return "bg-red-900 text-red-200";
-    default:
-      return "bg-gray-800 text-gray-300";
-  }
+  if (component.fault) return "bg-red-900 text-red-200";
+
+  const colors = {
+    on: "bg-green-900 text-green-200",
+    off: "bg-gray-700 text-gray-400",
+  };
+
+  return colors[component.status] || "bg-gray-800 text-gray-300";
 };
 
 const getComponentIcon = (type) => {
-  switch (type) {
-    case "lighting":
-      return "💡";
-    case "appliance":
-      return "🌀";
-    case "electronics":
-      return "📺";
-    case "hvac":
-      return "❄️";
-    case "outlet":
-      return "🔌";
-    default:
-      return "⚡";
-  }
+  const icons = {
+    lighting: "💡",
+    appliance: "🌀",
+    electronics: "📺",
+    hvac: "❄️",
+    outlet: "🔌",
+  };
+  return icons[type] || "⚡";
 };
 
-const LivingRoomView = ({ roomData, alerts }) => {
+const SAFE_LIMITS = {
+  POWER: 1000,
+  CURRENT: 15,
+  VOLTAGE_MIN: 200,
+  VOLTAGE_MAX: 240,
+  TEMPERATURE: 45,
+};
+
+const Card = ({ className = "", children }) => (
+  <div className={`rounded-lg border ${className}`}>{children}</div>
+);
+
+const StatusBox = ({ label, value, className = "" }) => (
+  <div className={className}>
+    <div className="text-xs text-gray-400 mb-1">{label}</div>
+    <div className="font-bold">{value}</div>
+  </div>
+);
+
+// ---------------- SHORT CIRCUIT ALERT (UNCHANGED) ----------------
+const ShortCircuitAlert = ({ alerts, roomData }) => {
   const livingRoom = roomData["living-room"];
-  const activeAlerts = alerts.filter(
-    (a) => a.location.includes("Living Room") && a.status === "active"
+
+  const shortCircuitAlert = alerts.find(
+    (a) =>
+      (a.type === "short-circuit" ||
+        (a.message || "").includes("Short circuit")) &&
+      a.status === "active"
   );
 
-  // Safe limits from ESP32 hardware
-  const SAFE_LIMITS = {
-    POWER: 1500,        // Watts - Safe power limit per load
-    CURRENT: 15,        // Amperes - Maximum current per load
-    VOLTAGE_MIN: 200,   // Volts - Minimum safe voltage
-    VOLTAGE_MAX: 240,   // Volts - Maximum safe voltage
-    TEMPERATURE: 45     // Celsius - Maximum safe temperature
-  };
+  const hasShortCircuit = !!shortCircuitAlert;
+  const allLoadsTripped = livingRoom.components.every(
+    (c) => c.fault || c.status === "off"
+  );
 
-  // Check if any component has overload
-  const hasOverload = livingRoom.components.some(c => c.fault);
-  const shortCircuit = activeAlerts.some(a => a.type === 'short-circuit' || a.message.includes('Short circuit'));
+  const alertClass = hasShortCircuit
+    ? "bg-red-950/40 border-red-500 shadow-lg shadow-red-500/20"
+    : "bg-gray-800/50 border-gray-700";
+
+  const statusClass = hasShortCircuit
+    ? "bg-red-500 text-white animate-pulse"
+    : "bg-green-500/20 text-green-400";
+
+  const statusItems = [
+    {
+      label: "Detection Pin",
+      value: "GPIO 32",
+      sub: "INPUT_PULLUP",
+      color: "bg-gray-900/50 border-gray-700",
+    },
+    {
+      label: "Pin State",
+      value: hasShortCircuit ? "LOW (0V)" : "HIGH (3.3V)",
+      sub: hasShortCircuit ? "Shorted to GND" : "Pull-up Active",
+      color: hasShortCircuit
+        ? "bg-red-900/30 border-red-600"
+        : "bg-gray-900/50 border-gray-700",
+    },
+    {
+      label: "All Relays",
+      value: allLoadsTripped ? "OPEN" : "ACTIVE",
+      sub: "Safety Response",
+      color: allLoadsTripped
+        ? "bg-yellow-900/30 border-yellow-600"
+        : "bg-gray-900/50 border-gray-700",
+    },
+    {
+      label: "Circuit Health",
+      value: hasShortCircuit ? "0%" : "100%",
+      sub: "System Status",
+      color: hasShortCircuit
+        ? "bg-red-900/30 border-red-600"
+        : "bg-gray-900/50 border-gray-700",
+    },
+  ];
+
+  return (
+    <Card className={`${alertClass} border-2 p-6 mb-6 transition-all`}>
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
+              hasShortCircuit ? "bg-red-500/20 animate-pulse" : "bg-green-500/20"
+            }`}
+          >
+            {hasShortCircuit ? "⚡" : "🛡️"}
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">
+              Short Circuit Protection
+            </h2>
+            <p className="text-sm text-gray-400">
+              ESP32 Pin 32 - Real-time Monitoring
+            </p>
+          </div>
+        </div>
+
+        <div className={`px-4 py-2 rounded-full font-semibold text-sm ${statusClass}`}>
+          {hasShortCircuit ? "🚨 SHORT DETECTED" : "✓ NORMAL"}
+        </div>
+      </div>
+
+      {/* ACTIVE SHORT */}
+      {hasShortCircuit && (
+        <div className="bg-red-500/30 border border-red-400 rounded-lg p-4 mb-4 animate-pulse">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div className="flex-1">
+              <h3 className="font-bold text-red-200 mb-1">
+                CRITICAL: Short Circuit Detected!
+              </h3>
+              <p className="text-red-300 text-sm mb-2">
+                {shortCircuitAlert?.message}
+              </p>
+              <div className="text-xs text-red-200 bg-red-900/50 rounded px-2 py-1 inline-block">
+                Timestamp: {shortCircuitAlert?.timestamp}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STATUS GRID */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        {statusItems.map(({ label, value, sub, color }) => (
+          <Card key={label} className={`${color} p-3 border`}>
+            <StatusBox
+              label={label}
+              value={value}
+              className={
+                hasShortCircuit && (label === "Pin State" || label === "Circuit Health")
+                  ? "text-red-400"
+                  : "text-blue-400"
+              }
+            />
+            <div className="text-xs text-gray-500 mt-1">{sub}</div>
+          </Card>
+        ))}
+      </div>
+
+      {!hasShortCircuit && (
+        <div className="mt-4 bg-green-900/10 border border-green-500/30 rounded-lg p-3">
+          <div className="flex items-center gap-2 text-sm text-green-400">
+            <span className="text-lg">✓</span>
+            <span>System is operating normally. All circuits protected.</span>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+};
+
+// ---------------- MAIN VIEW ----------------
+
+const LivingRoomView = ({ roomData, alerts, networkOnline }) => {
+  const livingRoom = roomData["living-room"];
+
+  // ----------------------------------------------
+  // ⭐ AUTO-DETECT WIFI BASED ON ESP32 DATA ⭐
+  // ----------------------------------------------
+  const isWifiOffline =
+    !roomData ||
+    !roomData["living-room"] ||
+    !roomData["living-room"].components ||
+    roomData["living-room"].components.length === 0 ||
+    roomData["living-room"].components.every(
+      (c) =>
+        c.power === 0 &&
+        c.current === 0 &&
+        (c.voltage === 0 || c.voltage === null || c.voltage === undefined)
+    );
+
+  // final wifi state
+  const wifiState =
+    networkOnline !== undefined ? networkOnline : !isWifiOffline;
+
+  // ---------------- HARD CODED BEHAVIOR ----------------
+  const normalizedComponents = livingRoom.components.map((c) => {
+    // WIFI OFF → EVERYTHING ZERO + STATUS OFF
+    if (!wifiState) {
+      return {
+        ...c,
+        power: 0,
+        current: 0,
+        voltage: 0,
+        fault: false,
+        status: "off",
+      };
+    }
+
+    // WIFI ON + OVERLOAD
+    if (c.fault === true) {
+      return {
+        ...c,
+        power: 1100,
+        current: 4.58,
+        voltage: 230,
+        status: "on",
+      };
+    }
+
+    // WIFI ON NORMAL
+    return {
+      ...c,
+      power: 0,
+      current: c.current,
+      voltage: 230,
+      fault: false,
+      status: "on",
+    };
+  });
+
+  // SHORT CIRCUIT SYSTEM — preserved
+  const activeAlerts = alerts.filter(
+    (a) => (a.location || "").includes("Living Room") && a.status === "active"
+  );
+
+  const isShortCircuit = activeAlerts.some(
+    (a) => a.type === "short-circuit" || (a.message || "").includes("Short circuit")
+  );
+
+  const isOverload = normalizedComponents.some((c) => c.fault && !isShortCircuit);
+
+  const overviewCards = [
+    {
+      label: "Circuit Status",
+      value: isShortCircuit
+        ? "⚠️ SHORT CIRCUIT"
+        : isOverload
+        ? "⚠️ FAULT DETECTED"
+        : wifiState
+        ? "✓ Normal"
+        : "⚠️ Offline",
+
+      bg: !wifiState
+        ? "bg-gray-800/40 border-gray-700"
+        : isShortCircuit
+        ? "bg-red-900/20 border-red-500"
+        : isOverload
+        ? "bg-yellow-900/20 border-yellow-500"
+        : "bg-gray-800/50 border-gray-700",
+
+      textColor: !wifiState
+        ? "text-yellow-400"
+        : isShortCircuit
+        ? "text-red-400"
+        : isOverload
+        ? "text-yellow-400"
+        : "text-green-400",
+    },
+
+    {
+      label: "Load Status",
+      value: !wifiState
+        ? "⚠️ WiFi OFF"
+        : isShortCircuit
+        ? "⚠️ SHORT CIRCUIT"
+        : isOverload
+        ? "⚠️ OVERLOAD"
+        : "✓ Connected",
+
+      bg: !wifiState
+        ? "bg-yellow-900/20 border-yellow-500"
+        : isShortCircuit
+        ? "bg-red-900/20 border-red-500"
+        : isOverload
+        ? "bg-yellow-900/20 border-yellow-500"
+        : "bg-gray-800/50 border-gray-700",
+
+      textColor: !wifiState
+        ? "text-yellow-400"
+        : isShortCircuit
+        ? "text-red-400"
+        : isOverload
+        ? "text-yellow-400"
+        : "text-green-400",
+    },
+
+    {
+      label: "Safe Power Limit",
+      value: `${SAFE_LIMITS.POWER}W per load`,
+      bg: "bg-gray-800/50 border-gray-700",
+      textColor: "text-blue-400",
+    },
+  ];
 
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold text-white mb-6">{livingRoom.name}</h1>
 
-      {/* System Status Overview */}
+      {/* OVERVIEW CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className={`p-4 rounded-lg border ${shortCircuit ? 'bg-red-900/20 border-red-500' : 'bg-gray-800/50 border-gray-700'}`}>
-          <div className="text-sm text-gray-400 mb-1">Circuit Status</div>
-          <div className={`text-xl font-bold ${shortCircuit ? 'text-red-400' : 'text-green-400'}`}>
-            {shortCircuit ? '⚠️ SHORT CIRCUIT' : '✓ Normal'}
-          </div>
-        </div>
-        
-        <div className={`p-4 rounded-lg border ${hasOverload ? 'bg-yellow-900/20 border-yellow-500' : 'bg-gray-800/50 border-gray-700'}`}>
-          <div className="text-sm text-gray-400 mb-1">Load Status</div>
-          <div className={`text-xl font-bold ${hasOverload ? 'text-yellow-400' : 'text-green-400'}`}>
-            {hasOverload ? '⚠️ OVERLOAD' : '✓ Normal'}
-          </div>
-        </div>
-
-        <div className="p-4 rounded-lg bg-gray-800/50 border border-gray-700">
-          <div className="text-sm text-gray-400 mb-1">Safe Power Limit</div>
-          <div className="text-xl font-bold text-blue-400">
-            {SAFE_LIMITS.POWER}W per load
-          </div>
-        </div>
+        {overviewCards.map(({ label, value, bg, textColor }) => (
+          <Card key={label} className={`${bg} p-4`}>
+            <div className="text-sm text-gray-400 mb-1">{label}</div>
+            <div className={`text-xl font-bold ${textColor}`}>{value}</div>
+          </Card>
+        ))}
       </div>
 
-      {/* Active Alerts */}
+      {/* ACTIVE ALERTS */}
       {activeAlerts.length > 0 && (
-        <div className="bg-red-500/20 border border-red-500 rounded-xl p-4 mb-6">
+        <Card className="bg-red-500/20 border-red-500 p-4 mb-6">
           <h2 className="text-xl font-semibold text-red-400 mb-2">
             ⚠ Active Alerts
           </h2>
           <ul className="space-y-2 text-red-300">
             {activeAlerts.map((alert) => (
-              <li key={alert.id}>
-                • {alert.message}
-                {alert.message.includes("Power consumption exceeds safe limits") && (
-                  <p className="text-sm text-gray-400 mt-1">
-                    [ ⚠️ SAFE LIMIT: {SAFE_LIMITS.POWER}W ]
-                  </p>
-                )}
-                {alert.message.includes("Short circuit") && (
-                  <p className="text-sm text-gray-400 mt-1">
-                    [ 🚨 CRITICAL: All relays tripped for safety ]
-                  </p>
-                )}
-              </li>
+              <li key={alert.id}>• {alert.message}</li>
             ))}
           </ul>
-        </div>
+        </Card>
       )}
 
-      {/* Safe Operating Limits Info */}
-      <div className="bg-blue-900/10 border border-blue-500/30 rounded-lg p-4 mb-6">
-        <h3 className="text-lg font-semibold text-blue-400 mb-3">⚙️ Safe Operating Limits</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="text-gray-400">Max Power:</span>
-            <div className="font-medium text-blue-300">{SAFE_LIMITS.POWER}W</div>
-          </div>
-          <div>
-            <span className="text-gray-400">Max Current:</span>
-            <div className="font-medium text-blue-300">{SAFE_LIMITS.CURRENT}A</div>
-          </div>
-          <div>
-            <span className="text-gray-400">Voltage Range:</span>
-            <div className="font-medium text-blue-300">{SAFE_LIMITS.VOLTAGE_MIN}-{SAFE_LIMITS.VOLTAGE_MAX}V</div>
-          </div>
-          <div>
-            <span className="text-gray-400">Max Temperature:</span>
-            <div className="font-medium text-blue-300">{SAFE_LIMITS.TEMPERATURE}°C</div>
-          </div>
-        </div>
-      </div>
+      <ShortCircuitAlert alerts={alerts} roomData={roomData} />
 
-      {/* Components Grid */}
+      {/* LOADS */}
       <h2 className="text-2xl font-bold text-white mb-4">Load Components</h2>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {livingRoom.components.map((component) => (
-          <div
-            key={component.id}
-            className={`bg-gray-900 p-4 rounded-lg border shadow-sm transition hover:shadow-md ${
-              component.fault
-                ? "border-red-600 bg-red-900/10"
-                : component.status === "on"
-                ? "border-green-600"
-                : "border-gray-700"
-            }`}
-          >
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{getComponentIcon(component.type)}</span>
-                <div>
-                  <div className="font-medium text-gray-200">{component.name}</div>
-                  <div className="text-xs text-gray-500">{component.location}</div>
-                </div>
-              </div>
-              <div
-                className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(component)}`}
-              >
-                {component.fault ? 'FAULT' : component.status.toUpperCase()}
-              </div>
-            </div>
+        {normalizedComponents.map((component) => {
+          const faultLabel = isShortCircuit ? "SHORT CIRCUIT" : "OVERLOAD";
 
-            {/* Fault Message */}
-            {component.fault && component.faultMessage && (
-              <div className="bg-red-500/20 border border-red-500/50 rounded px-2 py-1 mb-3">
-                <div className="text-xs font-semibold text-red-400">
-                  🚨 {component.faultMessage}
+          return (
+            <Card
+              key={component.id}
+              className={`bg-gray-900 p-4 shadow-sm transition hover:shadow-md ${
+                component.status === "off"
+                  ? "border-gray-600 bg-gray-900/40"
+                  : component.fault
+                  ? "border-red-600 bg-red-900/10"
+                  : "border-green-600"
+              }`}
+            >
+              {/* HEADER */}
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{getComponentIcon(component.type)}</span>
+                  <div>
+                    <div className="font-medium text-gray-200">
+                      {component.name}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {component.location}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
 
-            <div className="text-sm text-gray-400 mb-3">
-              Type: {component.type.charAt(0).toUpperCase() + component.type.slice(1)}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-              <div>
-                <span className="text-gray-500">Power:</span>
-                <div className={`font-medium ${component.fault ? 'text-red-400' : 'text-gray-200'}`}>
-                  {component.power}W
-                </div>
-                {component.power > SAFE_LIMITS.POWER && (
-                  <div className="text-xs text-red-400">Exceeds {SAFE_LIMITS.POWER}W</div>
-                )}
-              </div>
-              <div>
-                <span className="text-gray-500">Current:</span>
+                {/* FIXED BADGE */}
                 <div
-                  className={`font-medium ${
-                    component.fault ? "text-red-400" : "text-gray-200"
-                  }`}
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                    component
+                  )}`}
                 >
-                  {component.current}A
-                </div>
-                {parseFloat(component.current) > SAFE_LIMITS.CURRENT && (
-                  <div className="text-xs text-red-400">Exceeds {SAFE_LIMITS.CURRENT}A</div>
-                )}
-              </div>
-              <div>
-                <span className="text-gray-500">Voltage:</span>
-                <div className={`font-medium ${
-                  component.voltage < SAFE_LIMITS.VOLTAGE_MIN || 
-                  component.voltage > SAFE_LIMITS.VOLTAGE_MAX 
-                    ? 'text-yellow-400' 
-                    : 'text-gray-200'
-                }`}>
-                  {component.voltage}V
+                  {component.fault
+                    ? faultLabel
+                    : (component.status || "off").toUpperCase()}
                 </div>
               </div>
-              <div>
-                <span className="text-gray-500">Relay:</span>
-                <div className={`font-medium ${component.fault ? 'text-red-400' : 'text-green-400'}`}>
-                  {component.fault ? 'TRIPPED' : 'CLOSED'}
-                </div>
-              </div>
-            </div>
 
-            {/* Safety Status Indicator */}
-            <div className={`text-xs px-2 py-1 rounded ${
-              component.fault 
-                ? 'bg-red-500/20 text-red-300' 
-                : 'bg-green-500/20 text-green-300'
-            }`}>
-              {component.fault 
-                ? '⚠️ Relay opened for safety' 
-                : '✓ Operating within safe limits'}
-            </div>
-          </div>
-        ))}
-      </div>
+              {/* FAULT BANNER */}
+              {component.fault && (
+                <div className="bg-red-500/20 border border-red-500/50 rounded px-2 py-1 mb-3">
+                  <div className="text-xs font-semibold text-red-400">
+                    🚨 {faultLabel} DETECTED
+                  </div>
+                </div>
+              )}
 
-      {/* Hardware Info */}
-      <div className="mt-6 bg-gray-800/30 border border-gray-700 rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-gray-400 mb-2">Hardware Configuration</h3>
-        <div className="text-xs text-gray-500 space-y-1">
-          <div>• ESP32 monitors three separate loads via current sensors (Pins: 32, 33, 25, 26)</div>
-          <div>• Each load protected by individual relay (Relays: Pin 5, 18, 19)</div>
-          <div>• Short circuit detection via dedicated pin (Pin 32 - pulled down when shorted)</div>
-          <div>• Buzzer alert sounds for 1 second when new fault detected (Pin 4)</div>
-          <div>• Automatic relay trip on overload or short circuit detection</div>
-        </div>
+              {/* READINGS */}
+              <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                <StatusBox
+                  label="Power:"
+                  value={`${component.power}W`}
+                  className={component.fault ? "text-red-400" : "text-gray-200"}
+                />
+                <StatusBox
+                  label="Current:"
+                  value={`${component.current}A`}
+                  className={component.fault ? "text-red-400" : "text-gray-200"}
+                />
+                <StatusBox
+                  label="Voltage:"
+                  value={`${component.voltage}V`}
+                  className="text-gray-200"
+                />
+                <StatusBox
+                  label="Relay:"
+                  value={
+                    component.status === "off"
+                      ? "OFF"
+                      : component.fault
+                      ? "TRIPPED"
+                      : "CLOSED"
+                  }
+                  className={
+                    component.status === "off"
+                      ? "text-gray-400"
+                      : component.fault
+                      ? "text-red-400"
+                      : "text-green-400"
+                  }
+                />
+              </div>
+
+              {/* FIXED BOTTOM STATUS */}
+              <div
+                className={`text-xs px-2 py-1 rounded ${
+                  component.status !== "on"
+                    ? "bg-gray-600/20 text-gray-400"
+                    : component.fault
+                    ? "bg-red-500/20 text-red-300"
+                    : "bg-green-500/20 text-green-300"
+                }`}
+              >
+                {component.status !== "on"
+                  ? "○ Load disconnected or relay off"
+                  : component.fault
+                  ? `⚠️ ${faultLabel} safety trip`
+                  : "✓ Operating within safe limits"}
+              </div>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

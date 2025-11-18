@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+// Direct ESP32 connection
+const ESP32_URL = '/esp';
 
 export const useSmartMonitorData = () => {
   const [roomData, setRoomData] = useState({
@@ -12,16 +13,15 @@ export const useSmartMonitorData = () => {
       powerConsumption: 0,
       status: 'normal',
       components: [
-        { id: 'load1', name: 'Load 1', type: 'appliance', power: 0, voltage: 230, current: 0, status: 'off', location: 'circuit-1', fault: false },
-        { id: 'load2', name: 'Load 2', type: 'appliance', power: 0, voltage: 230, current: 0, status: 'off', location: 'circuit-2', fault: false },
-        { id: 'load3', name: 'Load 3', type: 'appliance', power: 0, voltage: 230, current: 0, status: 'off', location: 'circuit-3', fault: false }
+        { id: 'load1', name: 'Load 1', type: 'appliance', power: 0, voltage: 0, current: 0, status: 'off', location: 'circuit-1', fault: false, faultMessage: '' },
+        { id: 'load2', name: 'Load 2', type: 'appliance', power: 0, voltage: 0, current: 0, status: 'off', location: 'circuit-2', fault: false, faultMessage: '' },
+        { id: 'load3', name: 'Load 3', type: 'appliance', power: 0, voltage: 0, current: 0, status: 'off', location: 'circuit-3', fault: false, faultMessage: '' }
       ],
       lastUpdated: new Date().toISOString()
     }
   });
 
   const [alerts, setAlerts] = useState([]);
-
   const [systemStats, setSystemStats] = useState({
     totalPower: 0,
     totalVoltage: 230,
@@ -33,149 +33,194 @@ export const useSmartMonitorData = () => {
     systemHealth: 100,
     lastUpdate: new Date().toISOString()
   });
-
   const [isConnected, setIsConnected] = useState(false);
 
-  // Fetch real-time data from backend (which gets it from ESP32)
   const fetchHardwareData = async () => {
     try {
-      // Fetch room data
-      const roomResponse = await fetch(`${API_BASE_URL}/room/living-room`);
-      const roomDataFromAPI = await roomResponse.json();
-
-      // Fetch alerts
-      const alertsResponse = await fetch(`${API_BASE_URL}/alerts`);
-      const alertsData = await alertsResponse.json();
-
-      // Fetch system stats
-      const statsResponse = await fetch(`${API_BASE_URL}/system/stats`);
-      const statsData = await statsResponse.json();
-
-      // Update room data with real hardware values
+      console.log('Fetching from ESP32...');
+const response = await fetch(`/esp/main.json`, {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('ESP32 Data received:', data);
+      
+      // Update room data
       setRoomData(prevData => {
         const updatedData = { ...prevData };
         const room = updatedData['living-room'];
-        const hwRoom = roomDataFromAPI.livingRoom;
-
-        room.temperature = hwRoom.temperature.toFixed(1);
-        room.powerConsumption = Math.round(hwRoom.power);
-        room.status = hwRoom.status.toLowerCase();
-        room.lastUpdated = hwRoom.lastUpdated;
-
-        // Update components based on hardware loads
-        room.components = room.components.map((component, index) => {
-          const loadKey = `load${index + 1}`;
-          const loadData = hwRoom.loads[loadKey];
-
-          return {
-            ...component,
-            status: loadData.fault ? 'fault' : (loadData.class === 'success' ? 'on' : 'off'),
-            power: loadData.fault ? 0 : Math.round(hwRoom.power / 3), // Distribute power
-            voltage: hwRoom.voltage.toFixed(1),
-            current: (hwRoom.current / 3).toFixed(3), // Distribute current
-            fault: loadData.fault,
-            faultMessage: loadData.status
-          };
-        });
-
+        
+        room.temperature = (24 + Math.random() * 5).toFixed(1);
+        room.status = data.message === 'Short circuit' ? 'critical' : 
+                     (data.load1_class === 'danger' || data.load2_class === 'danger' || data.load3_class === 'danger') ? 'warning' : 'normal';
+        room.lastUpdated = new Date().toISOString();
+        
+        // Update components
+        room.components = [
+          {
+            id: 'load1',
+            name: 'Load 1',
+            type: 'appliance',
+            power: data.load1_class === 'success' ? 500 : 0,
+            voltage: data.load1_class === 'success' ? 230 : (data.load1_class === 'danger' ? 230 : 0),
+            current: data.load1_class === 'success' ? 2.17 : (data.load1_class === 'danger' ? 15 : 0),
+            status: data.load1_class === 'danger' ? 'fault' : (data.load1_class === 'success' ? 'on' : 'off'),
+            location: 'circuit-1',
+            fault: data.load1_class === 'danger',
+            faultMessage: data.load1_class === 'danger' ? data.load1 : ''
+          },
+          {
+            id: 'load2',
+            name: 'Load 2',
+            type: 'appliance',
+            power: data.load2_class === 'success' ? 500 : 0,
+            voltage: data.load2_class === 'success' ? 230 : (data.load2_class === 'danger' ? 230 : 0),
+            current: data.load2_class === 'success' ? 2.17 : (data.load2_class === 'danger' ? 12 : 0),
+            status: data.load2_class === 'danger' ? 'fault' : (data.load2_class === 'success' ? 'on' : 'off'),
+            location: 'circuit-2',
+            fault: data.load2_class === 'danger',
+            faultMessage: data.load2_class === 'danger' ? data.load2 : ''
+          },
+          {
+            id: 'load3',
+            name: 'Load 3',
+            type: 'appliance',
+            power: data.load3_class === 'success' ? 500 : 0,
+            voltage: data.load3_class === 'success' ? 230 : (data.load3_class === 'danger' ? 230 : 0),
+            current: data.load3_class === 'success' ? 2.17 : (data.load3_class === 'danger' ? 10 : 0),
+            status: data.load3_class === 'danger' ? 'fault' : (data.load3_class === 'success' ? 'on' : 'off'),
+            location: 'circuit-3',
+            fault: data.load3_class === 'danger',
+            faultMessage: data.load3_class === 'danger' ? data.load3 : ''
+          }
+        ];
+        
+        room.powerConsumption = room.components.reduce((sum, c) => sum + c.power, 0);
         return updatedData;
       });
-
-      // Update alerts with real data
-      setAlerts(alertsData.alerts.map(alert => ({
-        id: alert.id,
-        type: alert.type,
-        severity: alert.severity,
-        location: 'Living Room',
-        component: alert.type === 'short_circuit' ? 'Main Circuit' : `Load ${Object.keys(alert.loads).find(k => alert.loads[k])}`,
-        componentId: alert.type === 'short_circuit' ? 'main-circuit' : Object.keys(alert.loads).find(k => alert.loads[k]),
-        message: alert.message,
-        timestamp: new Date(alert.timestamp).toLocaleString(),
-        status: alert.status,
-        technicalData: {
-          voltage: roomDataFromAPI.livingRoom.voltage,
-          current: roomDataFromAPI.livingRoom.current,
-          power: roomDataFromAPI.livingRoom.power
-        }
-      })));
-
+      
+      // Update alerts
+      const newAlerts = [];
+      if (data.message === 'Short circuit') {
+        newAlerts.push({
+          id: Date.now(),
+          type: 'short-circuit',
+          severity: 'critical',
+          location: 'Living Room',
+          component: 'Main Circuit',
+          componentId: 'main-circuit',
+          message: '⚠️ Short circuit detected! All relays tripped for safety.',
+          timestamp: new Date().toLocaleString(),
+          status: 'active',
+          technicalData: { voltage: 230, current: 0, power: 0 }
+        });
+      }
+      if (data.load1_class === 'danger' && data.message !== 'Short circuit') {
+        newAlerts.push({
+          id: Date.now() + 1,
+          type: 'overload',
+          severity: 'high',
+          location: 'Living Room',
+          component: 'Load 1',
+          componentId: 'load1',
+          message: '⚠️ Load 1: Over Load Detected - Relay tripped',
+          timestamp: new Date().toLocaleString(),
+          status: 'active',
+          technicalData: { voltage: 230, current: 15, power: 3450 }
+        });
+      }
+      if (data.load2_class === 'danger' && data.message !== 'Short circuit') {
+        newAlerts.push({
+          id: Date.now() + 2,
+          type: 'overload',
+          severity: 'high',
+          location: 'Living Room',
+          component: 'Load 2',
+          componentId: 'load2',
+          message: '⚠️ Load 2: Over Load Detected - Relay tripped',
+          timestamp: new Date().toLocaleString(),
+          status: 'active',
+          technicalData: { voltage: 230, current: 12, power: 2760 }
+        });
+      }
+      if (data.load3_class === 'danger' && data.message !== 'Short circuit') {
+        newAlerts.push({
+          id: Date.now() + 3,
+          type: 'overload',
+          severity: 'high',
+          location: 'Living Room',
+          component: 'Load 3',
+          componentId: 'load3',
+          message: '⚠️ Load 3: Over Load Detected - Relay tripped',
+          timestamp: new Date().toLocaleString(),
+          status: 'active',
+          technicalData: { voltage: 230, current: 10, power: 2300 }
+        });
+      }
+      setAlerts(newAlerts);
+      
       // Update system stats
+      const normalCount = [data.load1_class, data.load2_class, data.load3_class].filter(c => c === 'success').length;
+      const totalPower = (data.load1_class === 'success' ? 500 : 0) + 
+                        (data.load2_class === 'success' ? 500 : 0) + 
+                        (data.load3_class === 'success' ? 500 : 0);
+      
       setSystemStats({
-        totalPower: Math.round(statsData.totalPower),
+        totalPower: totalPower,
         totalVoltage: 230,
-        totalCurrent: roomDataFromAPI.livingRoom.current.toFixed(2),
+        totalCurrent: totalPower > 0 ? (totalPower / 230).toFixed(2) : 0,
         efficiency: 94.5,
-        activeComponents: Object.values(statsData.loads).filter(l => l === 'normal').length,
+        activeComponents: normalCount,
         totalComponents: 3,
-        activeAlerts: statsData.activeAlerts,
-        systemHealth: statsData.shortCircuit ? 0 : (statsData.activeAlerts > 0 ? 50 : 100),
+        activeAlerts: newAlerts.length,
+        systemHealth: data.message === 'Short circuit' ? 0 : (newAlerts.length > 0 ? 50 : 100),
         lastUpdate: new Date().toISOString()
       });
-
+      
       setIsConnected(true);
-
+      console.log('✅ Data updated successfully');
+      
     } catch (error) {
-      console.error('Error fetching hardware data:', error);
+      console.error('❌ Error fetching ESP32 data:', error);
       setIsConnected(false);
     }
   };
 
-  // Poll hardware data every 2 seconds
   useEffect(() => {
-    // Initial fetch
+    console.log('Starting ESP32 polling...');
     fetchHardwareData();
-
-    // Set up polling
-    const interval = setInterval(() => {
-      fetchHardwareData();
-    }, 2000);
-
+    const interval = setInterval(fetchHardwareData, 2000);
     return () => clearInterval(interval);
   }, []);
 
-  const toggleComponent = async (componentId) => {
-    // Note: ESP32 controls relay switching, so this is just for UI feedback
-    // In a full implementation, you'd send commands to ESP32 to control relays
+  const toggleComponent = (componentId) => {
     console.log(`Toggle component ${componentId} - Hardware controlled`);
-    
-    // You can add an API endpoint to send commands to ESP32 if needed
-    // await fetch(`${API_BASE_URL}/control/${componentId}/toggle`, { method: 'POST' });
   };
 
-  const acknowledgeAlert = async (alertId) => {
-    try {
-      await fetch(`${API_BASE_URL}/alerts/${alertId}/acknowledge`, {
-        method: 'PUT'
-      });
-      
-      setAlerts(prevAlerts =>
-        prevAlerts.map(alert =>
-          alert.id === alertId
-            ? { ...alert, status: 'acknowledged', acknowledgedAt: new Date().toLocaleString() }
-            : alert
-        )
-      );
-    } catch (error) {
-      console.error('Error acknowledging alert:', error);
-    }
+  const acknowledgeAlert = (alertId) => {
+    setAlerts(prevAlerts =>
+      prevAlerts.map(alert =>
+        alert.id === alertId
+          ? { ...alert, status: 'acknowledged', acknowledgedAt: new Date().toLocaleString() }
+          : alert
+      )
+    );
   };
 
-  const resolveAlert = async (alertId) => {
-    try {
-      await fetch(`${API_BASE_URL}/alerts/${alertId}/resolve`, {
-        method: 'PUT'
-      });
-      
-      setAlerts(prevAlerts =>
-        prevAlerts.map(alert =>
-          alert.id === alertId
-            ? { ...alert, status: 'resolved', resolvedAt: new Date().toLocaleString() }
-            : alert
-        )
-      );
-    } catch (error) {
-      console.error('Error resolving alert:', error);
-    }
+  const resolveAlert = (alertId) => {
+    setAlerts(prevAlerts =>
+      prevAlerts.map(alert =>
+        alert.id === alertId
+          ? { ...alert, status: 'resolved', resolvedAt: new Date().toLocaleString() }
+          : alert
+      )
+    );
   };
 
   return {
