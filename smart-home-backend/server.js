@@ -1,4 +1,4 @@
-// server.js - Main server file
+// server.js 
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -31,7 +31,7 @@ let alertHistory = [];
 // Fetch data from ESP32
 async function fetchESP32Data() {
   try {
-    const response = await axios.get(`${ESP32_URL}/data.json`, {
+    const response = await axios.get(`${ESP32_URL}/main.json`, {
       timeout: 5000
     });
     

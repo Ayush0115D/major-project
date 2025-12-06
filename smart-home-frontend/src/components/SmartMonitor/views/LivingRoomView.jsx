@@ -72,14 +72,14 @@ const ShortCircuitAlert = ({ alerts, roomData }) => {
       sub: "INPUT_PULLUP",
       color: "bg-gray-900/50 border-gray-700",
     },
-    {
-      label: "Pin State",
-      value: hasShortCircuit ? "LOW (0V)" : "HIGH (3.3V)",
-      sub: hasShortCircuit ? "Shorted to GND" : "Pull-up Active",
-      color: hasShortCircuit
-        ? "bg-red-900/30 border-red-600"
-        : "bg-gray-900/50 border-gray-700",
-    },
+    // {
+    //   label: "Pin State",
+    //   value: hasShortCircuit ? "LOW (0V)" : "HIGH (3.3V)",
+    //   sub: hasShortCircuit ? "Shorted to GND" : "Pull-up Active",
+    //   color: hasShortCircuit
+    //     ? "bg-red-900/30 border-red-600"
+    //     : "bg-gray-900/50 border-gray-700",
+    // },
     {
       label: "All Relays",
       value: allLoadsTripped ? "OPEN" : "ACTIVE",
