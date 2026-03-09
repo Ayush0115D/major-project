@@ -226,7 +226,7 @@ const DashboardView = ({ roomData, alerts, systemStats }) => {
             <div>
               <h3 className="text-lg font-semibold">Total Power</h3>
               <p className="text-3xl font-bold">{systemStats?.totalPower || room?.powerConsumption || 0}W</p>
-              <p className="text-sm opacity-90">Live consumption</p>
+              <p className="text-sm opacity-90">Power consumption</p>
             </div>
             <div className="text-4xl">⚡</div>
           </div>
@@ -287,81 +287,90 @@ const DashboardView = ({ roomData, alerts, systemStats }) => {
           <OverloadAlertDashboard alerts={alerts} roomData={roomData} />
         </div>
       </div>
+<div className="bg-slate-800 rounded-xl shadow-lg p-6 border border-slate-700">
 
-      {/* Room Status */}
-      <div className="bg-slate-800 rounded-xl shadow-lg p-6 border border-slate-700">
-        <h3 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
-          🛋️ <span>Living Room Status</span>
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-400">{room?.temperature || 24}°C</div>
-            <div className="text-sm text-gray-400">Temperature</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-green-400">{room?.humidity || 45}%</div>
-            <div className="text-sm text-gray-400">Humidity</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-purple-400">{room?.powerConsumption || 0}W</div>
-            <div className="text-sm text-gray-400">Power Usage</div>
-          </div>
-          <div className="text-center">
-            <div className={`text-3xl font-bold ${
-              room?.status === 'normal' ? 'text-green-400' :
-              room?.status === 'warning' ? 'text-yellow-400' :
-              'text-red-400'
-            }`}>
-              {room?.status?.toUpperCase() || 'NORMAL'}
-            </div>
-            <div className="text-sm text-gray-400">Status</div>
-          </div>
-        </div>
-      </div>
+  {/* Title */}
+  <h3 className="text-xl font-semibold mb-6 text-white flex items-center gap-2">
+    🛡️ <span>About SHIELD Smart Home Monitor</span>
+  </h3>
 
-      {/* Component Overview */}
-      {room?.components && (
-        <div className="bg-slate-800 rounded-xl shadow-lg p-6 border border-slate-700">
-          <h3 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
-            🔧 <span>Component Overview</span>
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {room.components.map((component) => (
-              <div 
-                key={component.id} 
-                className={`bg-slate-700/50 p-4 rounded-lg border ${
-                  component.fault ? 'border-red-500/50' :
-                  component.status === 'on' ? 'border-green-500/50' :
-                  'border-slate-600'
-                }`}
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div className="font-medium text-white">{component.name}</div>
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    component.status === 'on' ? 'bg-green-500/20 text-green-300' :
-                    component.status === 'off' ? 'bg-gray-500/20 text-gray-300' :
-                    component.fault ? 'bg-red-500/20 text-red-300' :
-                    'bg-gray-500/20 text-gray-300'
-                  }`}>
-                    {component.fault ? 'FAULT' : component.status.toUpperCase()}
-                  </div>
-                </div>
-                <div className="text-sm text-gray-400 mb-1">
-                  {component.type.charAt(0).toUpperCase() + component.type.slice(1)}
-                </div>
-                <div className="text-sm text-gray-300">
-                  {component.power}W • {component.current}A
-                </div>
-                {component.fault && component.faultMessage && (
-                  <div className="mt-2 text-xs text-red-400 bg-red-900/20 rounded px-2 py-1">
-                    {component.faultMessage}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+  {/* Description */}
+  <p className="text-gray-300 text-sm leading-relaxed mb-6">
+    SHIELD is an IoT-based smart electrical safety system designed to monitor
+    household power usage and protect appliances from electrical hazards such as
+    overloads and short circuits. The system integrates hardware monitoring with
+    a full-stack web dashboard to provide real-time insights, alerts, and remote
+    monitoring capabilities.
+  </p>
+
+  {/* Info Grid */}
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    {/* Hardware */}
+    <div className="bg-slate-700/40 border border-slate-600 rounded-lg p-4">
+      <h4 className="text-white font-semibold mb-2">🔌 Hardware</h4>
+      <p className="text-xs text-gray-400 leading-relaxed">
+        Powered by an <span className="text-blue-400">ESP32 microcontroller</span>
+        which monitors electrical parameters such as voltage, current, and power
+        usage. It detects abnormal conditions and triggers safety actions.
+      </p>
+    </div>
+
+    {/* Web Dashboard */}
+    <div className="bg-slate-700/40 border border-slate-600 rounded-lg p-4">
+      <h4 className="text-white font-semibold mb-2">💻 Web Dashboard</h4>
+      <p className="text-xs text-gray-400 leading-relaxed">
+        This dashboard is built using a <span className="text-cyan-400">full-stack
+        technology stack</span> including React.js, Tailwind CSS, Node.js and
+        Express.js. It allows users to monitor power usage, system health,
+        alerts, and appliance status in real time.
+      </p>
+    </div>
+
+    {/* Notifications */}
+    <div className="bg-slate-700/40 border border-slate-600 rounded-lg p-4">
+      <h4 className="text-white font-semibold mb-2">📧 Alert System</h4>
+      <p className="text-xs text-gray-400 leading-relaxed">
+        The system uses <span className="text-yellow-400">Nodemailer</span> to send
+        automatic email notifications whenever a fault such as overload or short
+        circuit is detected, ensuring users are informed immediately.
+      </p>
+    </div>
+
+  </div>
+
+  {/* Feature List */}
+  <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+
+    <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600">
+      <div className="text-lg">⚡</div>
+      <div className="text-xs text-gray-300 mt-1">Real-time Monitoring</div>
+    </div>
+
+    <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600">
+      <div className="text-lg">🔥</div>
+      <div className="text-xs text-gray-300 mt-1">Short Circuit Protection</div>
+    </div>
+
+    <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600">
+      <div className="text-lg">🚨</div>
+      <div className="text-xs text-gray-300 mt-1">Overload Detection</div>
+    </div>
+
+    <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600">
+      <div className="text-lg">📊</div>
+      <div className="text-xs text-gray-300 mt-1">Smart Dashboard</div>
+    </div>
+
+  </div>
+
+  {/* Footer */}
+  <div className="mt-6 pt-4 border-t border-slate-700 flex justify-between text-xs text-gray-400">
+    <span>IoT Based Electrical Safety Monitoring System</span>
+
+  </div>
+
+</div>
     </div>
   );
 };

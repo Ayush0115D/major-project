@@ -6,7 +6,7 @@ import SystemAlerts from './components/SystemAlerts';
 import MonitoringView from './views/MonitoringView';
 import SettingsView from './views/SettingsView';
 import SafetyProtocols from './components/SafetyProtocols';
-import LivingRoomView from './views/LivingRoomView';
+import LivingRoomView from './views/LivingRoomView' ;
 import { useSmartMonitorData } from "../hooks/useSmartMonitorData.js";
 
 const SmartMonitor = () => {
