@@ -288,7 +288,10 @@ const HomeLayoutMonitor = ({ livingRoomData }) => {
   // ✅ SEND ALERT TO BACKEND
   const sendAlertToBackend = async (alertType, power, current, voltage, riskLevel) => {
     try {
-      const response = await fetch('/api/alerts/send-overload-alert', {
+      // Using Render backend URL
+      const BACKEND_URL = 'https://major-project-h76o.onrender.com';
+      
+      const response = await fetch(`${BACKEND_URL}/api/alerts/send-overload-alert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
