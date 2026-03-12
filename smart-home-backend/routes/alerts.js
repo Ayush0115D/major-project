@@ -9,7 +9,7 @@ const router = express.Router();
 // ============= SEND OVERLOAD ALERT =============
 router.post('/send-overload-alert', async (req, res) => {
   try {
-    const { socketName, socketLocation, power, current, voltage, timestamp } = req.body;
+    const { socketName, socketLocation, power, current, voltage, timestamp, riskLevel, recipientEmail } = req.body;
 
     // ✅ VALIDATE INPUT
     if (!socketName || power === undefined || current === undefined || voltage === undefined) {
@@ -26,8 +26,9 @@ router.post('/send-overload-alert', async (req, res) => {
       power: parseFloat(power),
       current: parseFloat(current),
       voltage: parseFloat(voltage),
+      riskLevel: parseFloat(riskLevel),
       timestamp: timestamp || new Date().toISOString(),
-      recipientEmail: 'ayush2231100@akgec.ac.in'
+      recipientEmail: recipientEmail || 'ayush2231100@akgec.ac.in'
     });
 
     // ✅ LOG ALERT
@@ -38,6 +39,7 @@ router.post('/send-overload-alert', async (req, res) => {
       power,
       current,
       voltage,
+      riskLevel,
       timestamp: timestamp || new Date().toISOString(),
       status: 'sent'
     });
