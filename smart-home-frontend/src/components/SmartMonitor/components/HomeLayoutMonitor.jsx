@@ -101,7 +101,7 @@ const AIMonitor = {
     }
 
     return {
-      overall: Math.round((overloadRisk + shortCircuitRisk) / 2),
+      overall: overloadRisk,  // Use overload risk for critical detection
       overloadRisk, shortCircuitRisk,
       oTrend: trend(this.history.i),
       sTrend: trend(this.history.v)
@@ -285,15 +285,20 @@ const HomeLayoutMonitor = ({ livingRoomData }) => {
     }
   };
 
-  // ✅ SEND ALERT TO BACKEND
+  // ✅ SEND ALERT TO EMAIL (Works when internet available)
+  // ✅ SEND ALERT TO EMAIL (With timeout handling)
   const sendAlertToBackend = async (alertType, power, current, voltage, riskLevel) => {
     try {
-      // Using Render backend URL
       const BACKEND_URL = 'https://major-project-h76o.onrender.com';
+      
+      // Create abort controller with 10 second timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       
       const response = await fetch(`${BACKEND_URL}/api/alerts/send-overload-alert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           alertType: alertType,
           socketName: 'Living Room',
@@ -302,22 +307,57 @@ const HomeLayoutMonitor = ({ livingRoomData }) => {
           current: parseFloat(current),
           voltage: parseFloat(voltage),
           riskLevel: parseFloat(riskLevel),
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          recipientEmail: 'ayush2231100@akgec.ac.in'
         })
       });
+      
+      clearTimeout(timeoutId);
 
       if (response.ok) {
-        console.log(`✅ ${alertType} sent to backend and email queued`);
+        console.log(`✅ ${alertType} email sent to ayush2231100@akgec.ac.in`);
         return true;
       } else {
-        console.error(`❌ Failed to send ${alertType} to backend`);
+        console.warn(`⚠️ Email service error - trying again`);
         return false;
       }
     } catch (error) {
-      console.error(`❌ Error sending ${alertType}:`, error);
+      console.warn(`⚠️ Error sending email (may retry):`, error.message);
       return false;
     }
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // ✅ DETECT OVERLOAD AND TRIGGER ALERTS
   useEffect(() => {
@@ -351,14 +391,12 @@ const HomeLayoutMonitor = ({ livingRoomData }) => {
       }]);
     }
 
-    // Reset when back to safe
-    if (power <= SAFE_LIMITS.POWER || risk.overall < 75) {
-      setShowWarning(false);
-      setWarningShown(false);
+    // Reset when back to safe (only check power/risk, not criticalShown)
+    if ((power <= SAFE_LIMITS.POWER || risk.overall < 75) && criticalShown) {
       setShowCritical(false);
       setCriticalShown(false);
     }
-  }, [data, risk, warningShown, criticalShown]);
+  }, [data, risk, criticalShown]);
 
   const getColor = (status) => {
     const colors = {
@@ -387,7 +425,7 @@ const HomeLayoutMonitor = ({ livingRoomData }) => {
       {/* CRITICAL POPUP */}
       <CriticalPopup 
         alertData={criticalData} 
-        onClose={() => setShowCritical(false)}
+        onClose={() => { setShowCritical(false); setCriticalData(null); }}
       />
 
       <div className="max-w-4xl mx-auto">
