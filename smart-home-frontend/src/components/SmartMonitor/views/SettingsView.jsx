@@ -3,6 +3,7 @@ import { Settings, Moon, Sun, Bell, Wifi, Mail, Smartphone, Monitor, Database, D
 
 const SettingsView = ({ theme, setTheme }) => {
   const [notifications, setNotifications] = useState({ email: true, sms: false, push: true });
+  const [exporting, setExporting] = useState(false);
   const dark = theme === 'dark';
 
   const tc = (darkClass, lightClass) => dark ? darkClass : lightClass;
@@ -12,10 +13,79 @@ const SettingsView = ({ theme, setTheme }) => {
     'bg-white border-gray-200'
   )}`;
 
-  /* ---------------- EXPORT DATA FUNCTION ---------------- */
+  /* ============= EXPORT ALERTS (JSON) ============= */
 
-  const exportData = () => {
+  const exportAlertLogs = async () => {
+    try {
+      setExporting(true);
+      
+      const BACKEND_URL = window.location.hostname === 'localhost'
+        ? 'http://localhost:5000'
+        : 'https://major-project-h76o.onrender.com';
 
+      const response = await fetch(`${BACKEND_URL}/api/alerts/history`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch alerts');
+      }
+
+      const result = await response.json();
+      const alerts = result.data || [];
+
+      if (alerts.length === 0) {
+        alert('❌ No alerts to export!');
+        setExporting(false);
+        return;
+      }
+
+      const exportData = {
+        exportInfo: {
+          exportedAt: new Date().toISOString(),
+          totalAlerts: alerts.length,
+          systemVersion: 'v2.1.0'
+        },
+        alerts: alerts.map(alert => ({
+          id: alert._id,
+          timestamp: new Date(alert.timestamp).toLocaleString(),
+          type: alert.alertType,
+          socketName: alert.socketName,
+          socketLocation: alert.socketLocation,
+          power: alert.power + 'W',
+          current: alert.current + 'A',
+          voltage: alert.voltage + 'V',
+          temperature: alert.temperature ? alert.temperature + '°C' : 'N/A',
+          riskLevel: alert.riskLevel + '%',
+          overloadRisk: alert.overloadRisk + '%',
+          shortCircuitRisk: alert.shortCircuitRisk + '%',
+          emailSent: alert.emailSent ? 'Yes' : 'No',
+          emailStatus: alert.emailStatus,
+          acknowledged: alert.acknowledged ? 'Yes' : 'No',
+          acknowledgedAt: alert.acknowledgedAt ? new Date(alert.acknowledgedAt).toLocaleString() : 'N/A'
+        }))
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `shield-alert-logs-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      alert(`✅ Exported ${alerts.length} alerts!`);
+    } catch (error) {
+      console.error('❌ Export error:', error);
+      alert('❌ Failed to export alerts: ' + error.message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  /* ============= EXPORT SYSTEM DATA (JSON) ============= */
+
+  const exportSystemData = () => {
     const data = {
       theme: theme,
       notifications: notifications,
@@ -26,33 +96,22 @@ const SettingsView = ({ theme, setTheme }) => {
         dataUsage: "0.4 GB",
         sensors: "8/8",
         apiStatus: "Online"
-      }
+      },
+      exportedAt: new Date().toISOString()
     };
 
-    const jsonData = JSON.stringify(data, null, 2);
-
-    const blob = new Blob([jsonData], { type: "application/json" });
-
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-
     const link = document.createElement("a");
-
     link.href = url;
-
-    const date = new Date().toISOString().split("T")[0];
-
-    link.download = `smart-monitor-data-${date}.json`;
-
+    link.download = `smart-monitor-data-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
-
     link.click();
-
     document.body.removeChild(link);
-
     URL.revokeObjectURL(url);
   };
 
-  /* ---------------- TOGGLE SWITCH ---------------- */
+  /* ============= TOGGLE SWITCH ============= */
 
   const ToggleSwitch = ({ enabled, onToggle }) => (
     <button
@@ -69,7 +128,7 @@ const SettingsView = ({ theme, setTheme }) => {
     </button>
   );
 
-  /* ---------------- NOTIFICATION ITEM ---------------- */
+  /* ============= NOTIFICATION ITEM ============= */
 
   const NotificationItem = ({ icon: Icon, label, desc, type, color }) => (
     <div className="flex items-center justify-between">
@@ -90,18 +149,23 @@ const SettingsView = ({ theme, setTheme }) => {
     </div>
   );
 
-  /* ---------------- ACTION BUTTON ---------------- */
+  /* ============= ACTION BUTTON ============= */
 
-  const ActionButton = ({ icon: Icon, label, desc, color, onClick }) => (
+  const ActionButton = ({ icon: Icon, label, desc, color, onClick, disabled = false }) => (
     <button
       onClick={onClick}
-      className={`w-full border p-4 rounded-xl transition-all duration-300 group ${tc(
+      disabled={disabled}
+      className={`w-full border p-4 rounded-xl transition-all duration-300 group ${
+        disabled 
+          ? 'opacity-50 cursor-not-allowed'
+          : ''
+      } ${tc(
         `bg-${color}-500/20 hover:bg-${color}-500/30 border-${color}-500/30`,
         `bg-${color}-50 hover:bg-${color}-100 border-${color}-200`
       )}`}
     >
       <Icon
-        className={`mx-auto mb-3 group-hover:scale-110 transition-transform ${tc(
+        className={`mx-auto mb-3 ${!disabled ? 'group-hover:scale-110' : ''} transition-transform ${tc(
           `text-${color}-400`,
           `text-${color}-600`
         )}`}
@@ -118,7 +182,7 @@ const SettingsView = ({ theme, setTheme }) => {
     </button>
   );
 
-  /* ---------------- INFO ROW ---------------- */
+  /* ============= INFO ROW ============= */
 
   const InfoRow = ({ label, value, color = 'blue', badge }) => (
     <div className="flex items-center justify-between">
@@ -141,7 +205,7 @@ const SettingsView = ({ theme, setTheme }) => {
     </div>
   );
 
-  /* ---------------- UI ---------------- */
+  /* ============= UI ============= */
 
   return (
     <div className={`p-8 min-h-screen transition-colors duration-300 ${tc('bg-gray-900', 'bg-gray-100')}`}>
@@ -234,17 +298,19 @@ const SettingsView = ({ theme, setTheme }) => {
 
           <ActionButton
             icon={Download}
-            label="Export Data"
-            desc="Download system logs"
-            color="blue"
-            onClick={exportData}
+            label="Export Alert Logs "
+            desc={exporting ? "Exporting..." : "Download all alerts"}
+            color="green"
+            onClick={exportAlertLogs}
+            disabled={exporting}
           />
 
           <ActionButton
-            icon={RefreshCw}
-            label="Reset Settings"
-            desc="Restore defaults"
-            color="red"
+            icon={Download}
+            label="Export System Data "
+            desc="Download system settings"
+            color="blue"
+            onClick={exportSystemData}
           />
 
         </div>
@@ -270,7 +336,7 @@ const SettingsView = ({ theme, setTheme }) => {
 
           <div className="space-y-4">
             <InfoRow label="Data Usage" value="0.4 GB" color="yellow" />
-            <InfoRow label="Active Sensors" value="8/8" color="purple" />
+            <InfoRow label="Active Sensors" value="6/6" color="purple" />
             <InfoRow label="API Status" value="Online" badge />
           </div>
 

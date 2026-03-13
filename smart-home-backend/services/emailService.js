@@ -6,6 +6,12 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// ============= DEBUG: Check if credentials exist =============
+console.log('🔍 EMAIL CONFIG DEBUG:');
+console.log('EMAIL_USER:', process.env.EMAIL_USER ? '✅ SET' : '❌ NOT SET');
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '✅ SET' : '❌ NOT SET');
+console.log('EMAIL_PASS length:', process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0);
+
 // ============= CONFIGURE EMAIL TRANSPORTER =============
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -18,14 +24,19 @@ const transporter = nodemailer.createTransport({
 // ============= VERIFY CONNECTION =============
 transporter.verify((error, success) => {
   if (error) {
-    console.error('❌ Email service error:', error);
+    console.error('❌ Email service ERROR:');
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    console.error('Full error:', error);
   } else {
-    console.log('✅ Email service ready');
+    console.log('✅ Email service READY and WORKING!');
   }
 });
 
 // ============= SEND OVERLOAD ALERT EMAIL =============
 export const sendOverloadAlert = async (alertData) => {
+  console.log('📧 SENDING EMAIL WITH DATA:', alertData);
+  
   const {
     socketName,
     socketLocation,
@@ -36,6 +47,9 @@ export const sendOverloadAlert = async (alertData) => {
     riskLevel,
     recipientEmail = 'ayush2231100@akgec.ac.in'
   } = alertData;
+
+  console.log('📬 Email will be sent to:', recipientEmail);
+  console.log('🔑 Using EMAIL_USER:', process.env.EMAIL_USER);
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -117,7 +131,7 @@ export const sendOverloadAlert = async (alertData) => {
           <div class="details">
             <p><strong>Location:</strong> ${socketLocation}</p>
             <p><strong>Power Consumption:</strong> ${power}W (Limit: 1000W)</p>
-            <p><strong>Current Draw:</strong> ${current}A (Limit: 15A)</p>
+            <p><strong>Current Draw:</strong> ${current}A (Limit: 6A)</p>
             <p><strong>Voltage:</strong> ${voltage}V</p>
             <p><strong>Overload Risk:</strong> ${riskLevel}%</p>
             <p><strong>Time:</strong> ${new Date(timestamp).toLocaleString()}</p>
@@ -141,9 +155,15 @@ export const sendOverloadAlert = async (alertData) => {
       html: htmlContent
     };
 
+    console.log('📨 Mail options:', {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject
+    });
+
     const info = await transporter.sendMail(mailOptions);
     
-    console.log(`✅ Email sent successfully to ${recipientEmail}`);
+    console.log(`✅ Email sent SUCCESSFULLY to ${recipientEmail}`);
     console.log(`   Message ID: ${info.messageId}`);
     
     return {
@@ -154,7 +174,10 @@ export const sendOverloadAlert = async (alertData) => {
     };
 
   } catch (error) {
-    console.error('❌ Error sending email:', error);
+    console.error('❌ FAILED TO SEND EMAIL');
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    console.error('Full error:', error);
     throw new Error(`Failed to send email: ${error.message}`);
   }
 };
